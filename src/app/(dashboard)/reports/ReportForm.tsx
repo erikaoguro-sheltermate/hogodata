@@ -32,25 +32,30 @@ function firstDayIso(year: number, month: number): string {
 }
 
 export function ReportForm({
-  orgs, role, sessionOrgId, initial, defaultOrgId,
+  orgs, role, sessionOrgId, initial, defaultOrgId, defaultSpecies, defaultYear, defaultMonth,
 }: {
   orgs: Organization[];
   role: string;
   sessionOrgId: string | null;
   initial: MonthlyReport | null;
   defaultOrgId?: string;
+  defaultSpecies?: Species;
+  defaultYear?: number;
+  defaultMonth?: number;
 }) {
   const router = useRouter();
   const isOrgUser = role === 'ORG_USER';
+  const initYear = initial?.year ?? defaultYear ?? 2026;
+  const initMonth = initial?.month ?? defaultMonth ?? 5;
 
   const [orgId, setOrgId] = React.useState(
     initial?.organizationId ?? (isOrgUser ? sessionOrgId ?? '' : defaultOrgId ?? orgs[0]?.id ?? ''),
   );
-  const [species, setSpecies] = React.useState<Species>(initial?.species ?? 'CAT');
-  const [year, setYear] = React.useState(initial?.year ?? 2026);
-  const [month, setMonth] = React.useState(initial?.month ?? 5);
-  const [periodStart, setPeriodStart] = React.useState(initial?.periodStart ?? firstDayIso(2026, 5));
-  const [periodEnd, setPeriodEnd] = React.useState(initial?.periodEnd ?? lastDayIso(2026, 5));
+  const [species, setSpecies] = React.useState<Species>(initial?.species ?? defaultSpecies ?? 'CAT');
+  const [year, setYear] = React.useState(initYear);
+  const [month, setMonth] = React.useState(initMonth);
+  const [periodStart, setPeriodStart] = React.useState(initial?.periodStart ?? firstDayIso(initYear, initMonth));
+  const [periodEnd, setPeriodEnd] = React.useState(initial?.periodEnd ?? lastDayIso(initYear, initMonth));
   const [beginningCount, setBeginningCount] = React.useState(initial?.beginningCount ?? 0);
   const [beginningFosterCount, setBeginningFosterCount] = React.useState(initial?.beginningFosterCount ?? 0);
   const [endingCount, setEndingCount] = React.useState(initial?.endingCount ?? 0);

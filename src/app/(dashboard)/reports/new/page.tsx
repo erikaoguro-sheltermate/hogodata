@@ -6,7 +6,7 @@ import { ReportForm } from '../ReportForm';
 export default async function NewReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ org?: string }>;
+  searchParams: Promise<{ org?: string; species?: string; year?: string; month?: string }>;
 }) {
   const sp = await searchParams;
   const [session, orgs] = await Promise.all([getSession(), listOrganizations()]);
@@ -24,6 +24,9 @@ export default async function NewReportPage({
         sessionOrgId={session.organizationId}
         initial={null}
         defaultOrgId={sp.org}
+        defaultSpecies={sp.species === 'DOG' || sp.species === 'CAT' ? sp.species : undefined}
+        defaultYear={sp.year ? Number(sp.year) : undefined}
+        defaultMonth={sp.month ? Number(sp.month) : undefined}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, Button, Badge, Field, Input, Select } from '@/components/ui';
 import { PREFECTURES, ORG_TYPES, prefectureByCode } from '@/lib/masters';
@@ -99,7 +100,9 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
             <tbody>
               {organizations.map((o) => (
                 <tr key={o.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-700">{o.name}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <Link href={`/organizations/${o.id}`} className="text-slate-700 hover:text-emerald-700 hover:underline">{o.name}</Link>
+                  </td>
                   <td className="px-4 py-3 text-slate-500">{prefectureByCode(o.prefectureCode)?.name ?? '—'}</td>
                   <td className="px-4 py-3 text-slate-600">{o.orgType}</td>
                   <td className="px-4 py-3 text-slate-500">{o.contactName || '—'}</td>
