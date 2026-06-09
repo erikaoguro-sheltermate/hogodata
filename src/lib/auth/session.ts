@@ -1,9 +1,11 @@
-// JASA Data Hub — セッション（デモ用）
-// 本番は Supabase Auth + Profile に置き換える（仕様書 §1・§7）。
-// デモではログイン無しで動かせるよう、Cookie でロールを切り替える簡易実装。
+// JASA Data Hub — セッション
+// Supabase が設定されていれば実認証（Supabase Auth + Profile）を使い、
+// 未設定のデモ環境では Cookie でロールを切り替える（ログイン不要で動作）。
 
 import { cookies } from 'next/headers';
 import type { Role } from '../types';
+import { isSupabaseConfigured, createSupabaseServerClient } from '../supabase/server';
+import { isDatabaseConfigured, prisma } from '../db';
 
 export interface Session {
   userId: string;
@@ -21,7 +23,7 @@ const DEMO_USERS: Record<Role, { userId: string; displayName: string; organizati
   VIEWER: { userId: 'demo-viewer', displayName: '閲覧者（デモ）', organizationId: null },
 };
 
-export async function getSession(): Promise<Session> {
+async function getDemoSession(): Promise<Session> {
   const store = await cookies();
   const role = (store.get(ROLE_COOKIE)?.value as Role) || 'ADMIN';
   const base = DEMO_USERS[role] ?? DEMO_USERS.ADMIN;
@@ -32,6 +34,29 @@ export async function getSession(): Promise<Session> {
     role: role in DEMO_USERS ? role : 'ADMIN',
     organizationId: role === 'ORG_USER' ? (orgOverride ?? base.organizationId) : null,
   };
+}
+
+export async function getSession(): Promise<Session> {
+  // 本番：Supabase Auth + Profile（ロール・所属団体）
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const profile = isDatabaseConfigured()
+        ? await prisma.profile.findUnique({ where: { id: user.id } })
+        : null;
+      return {
+        userId: user.id,
+        displayName: profile?.displayName ?? user.email ?? 'ユーザー',
+        role: (profile?.role as Role) ?? 'VIEWER',
+        organizationId: profile?.organizationId ?? null,
+      };
+    }
+    // middleware が未ログインを /login にリダイレクトするため通常ここには来ない
+    return { userId: 'anonymous', displayName: 'ゲスト', role: 'VIEWER', organizationId: null };
+  }
+  // デモ：Cookie ロール切替
+  return getDemoSession();
 }
 
 export function isAdmin(session: Session): boolean {

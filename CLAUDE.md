@@ -20,7 +20,8 @@ Vitest（バリデーション単体テスト）。
 
 ## 現在の実装状況（MVP）
 事務局UIが**DBなしで起動・確認できる**よう、データ層はシード済みインメモリ実装。
-本番は Prisma + Supabase に差し替える（`src/lib/data/repo.ts` のみ差し替え）。
+**本番DB配線は完了済み**：`DATABASE_URL` を設定すると Prisma（Supabase Postgres）に、
+`NEXT_PUBLIC_SUPABASE_URL` を設定すると Supabase Auth に**自動で切り替わる**（[docs/db-setup.md](docs/db-setup.md)）。
 
 | 機能 | 状態 |
 |------|------|
@@ -32,8 +33,9 @@ Vitest（バリデーション単体テスト）。
 | F-09 CSVエクスポート | ✅ `/api/exports/reports` |
 | F-11 ユーザー・権限 | ✅ `/settings/users`（ロール定義・境界） |
 | F-13 マスタ管理 | ✅ `/masters`（閲覧。編集はM後続） |
-| F-01 認証 | ⏳ デモはCookieロール切替。本番=Supabase Auth |
-| RLS | ⏳ `prisma/rls.sql` 用意済み。Supabase接続時に適用 |
+| F-01 認証 | ✅ 配線済み。Supabase設定で実認証／未設定はデモのロール切替 |
+| 本番DB | ✅ 配線済み。`DATABASE_URL` で Prisma に自動切替（`src/lib/data/`） |
+| RLS | ✅ `prisma/rls.sql` 用意済み。手順書どおり適用すれば有効 |
 | F-08 Excel取込 / F-10 還元PDF | ⏳ M4（将来） |
 
 ## ディレクトリ構成
@@ -62,11 +64,9 @@ npm run build      # 本番ビルド
 画面左下の「表示ロール」で 事務局 / 団体 / 閲覧者 を切り替えてデモできる。
 
 ## 本番DB接続（M1）
-1. Supabase プロジェクト作成 → `DATABASE_URL` を `.env` に設定
-2. `npx prisma migrate dev` でスキーマ適用 → `npx prisma db seed`
-3. `prisma/rls.sql` を Supabase で実行（RLS有効化）
-4. `src/lib/data/repo.ts` をインメモリ→Prismaクライアントに差し替え
-5. `src/lib/auth/session.ts` を Supabase Auth に差し替え
+手順は [docs/db-setup.md](docs/db-setup.md) 参照。要点は `.env` 設定 → `npm run db:migrate` →
+`npm run db:seed` → `prisma/rls.sql` 適用 → 管理者Profile作成。コードの差し替えは不要
+（`src/lib/data/repo.ts` と `src/lib/auth/session.ts` が環境変数で自動切替）。
 
 ## 中核のビジネスルール
 - **収支整合式（§5.5 / F-04）**: `記録終了 = 記録開始 + 収容合計 − 転帰合計`。

@@ -1,40 +1,48 @@
-// JASA Data Hub — データアクセスAPI（非同期）
+// JASA Data Hub — データアクセスAPI（非同期・環境で自動切替）
+//
+// DATABASE_URL が設定されていれば Prisma（本番DB）、未設定ならインメモリ（デモ）を使う。
 // UI（Server Components / Server Actions）はこの層のみを呼ぶ。
-// Prisma移行時はこのファイルの実装だけを差し替える。
 
 import type { Organization, MonthlyReport, ReportInput, ReportStatus, Species } from '../types';
-import * as store from './store';
+import { isDatabaseConfigured } from '../db';
+import * as memory from './memory-repo';
+import * as database from './prisma-repo';
 
 export type { ReportFilter } from './store';
+import type { ReportFilter } from './store';
 
-export async function listOrganizations(): Promise<Organization[]> {
-  return store._listOrganizations();
-}
-export async function getOrganization(id: string): Promise<Organization | undefined> {
-  return store._getOrganization(id);
-}
-export async function createOrganization(data: Omit<Organization, 'id'>): Promise<Organization> {
-  return store._createOrganization(data);
-}
-export async function updateOrganization(id: string, data: Partial<Omit<Organization, 'id'>>): Promise<Organization | undefined> {
-  return store._updateOrganization(id, data);
+function impl() {
+  return isDatabaseConfigured() ? database : memory;
 }
 
-export async function listReports(filter: store.ReportFilter = {}): Promise<MonthlyReport[]> {
-  return store._listReports(filter);
+export function listOrganizations(): Promise<Organization[]> {
+  return impl().listOrganizations();
 }
-export async function getReport(id: string): Promise<MonthlyReport | undefined> {
-  return store._getReport(id);
+export function getOrganization(id: string): Promise<Organization | undefined> {
+  return impl().getOrganization(id);
 }
-export async function findReport(organizationId: string, species: Species, year: number, month: number): Promise<MonthlyReport | undefined> {
-  return store._findReport(organizationId, species, year, month);
+export function createOrganization(data: Omit<Organization, 'id'>): Promise<Organization> {
+  return impl().createOrganization(data);
 }
-export async function saveReport(input: ReportInput, id: string | undefined, enteredById: string): Promise<MonthlyReport> {
-  return store._saveReport(input, id, enteredById);
+export function updateOrganization(id: string, data: Partial<Omit<Organization, 'id'>>): Promise<Organization | undefined> {
+  return impl().updateOrganization(id, data);
 }
-export async function setReportStatus(id: string, status: ReportStatus): Promise<MonthlyReport | undefined> {
-  return store._setReportStatus(id, status);
+
+export function listReports(filter: ReportFilter = {}): Promise<MonthlyReport[]> {
+  return impl().listReports(filter);
 }
-export async function deleteReport(id: string): Promise<boolean> {
-  return store._deleteReport(id);
+export function getReport(id: string): Promise<MonthlyReport | undefined> {
+  return impl().getReport(id);
+}
+export function findReport(organizationId: string, species: Species, year: number, month: number): Promise<MonthlyReport | undefined> {
+  return impl().findReport(organizationId, species, year, month);
+}
+export function saveReport(input: ReportInput, id: string | undefined, enteredById: string): Promise<MonthlyReport> {
+  return impl().saveReport(input, id, enteredById);
+}
+export function setReportStatus(id: string, status: ReportStatus): Promise<MonthlyReport | undefined> {
+  return impl().setReportStatus(id, status);
+}
+export function deleteReport(id: string): Promise<boolean> {
+  return impl().deleteReport(id);
 }
