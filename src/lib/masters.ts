@@ -3,7 +3,7 @@
 
 import type {
   AgeGroup, RegionOption, IntakeCategory, OutcomeCategory,
-  Prefecture, Species, Region, ReportStatus,
+  Prefecture, Species, Region, ReportStatus, AnimalKind,
 } from './types';
 
 // ---- 年齢区分 ----
@@ -67,6 +67,34 @@ export const REGION_BLOCKS = ['北海道', '東北', '関東', '中部', '近畿
 
 // ---- 団体種別 ----
 export const ORG_TYPES = ['NPO法人', '一般社団法人', '任意団体', '個人活動者', 'フォスター', 'その他'];
+
+// ---- 団体プロフィール用の選択肢 ----
+export const ANIMAL_HANDLING_OPTIONS = [
+  '第一種動物取扱業（登録）',
+  '第二種動物取扱業（届出）',
+  '登録・届出なし',
+  '不明',
+];
+
+export const ANIMAL_KINDS: { code: AnimalKind; name: string }[] = [
+  { code: 'DOG', name: '犬' },
+  { code: 'CAT', name: '猫' },
+  { code: 'OTHER', name: 'その他' },
+];
+
+export const ACTIVITY_OPTIONS = [
+  '保護・譲渡',
+  'TNR活動',
+  '一時預かり（フォスター）',
+  '医療・ケア',
+  '多頭飼育崩壊対応',
+  '普及啓発・教育',
+  '災害時対応',
+  '行政連携',
+  'その他',
+];
+
+export const ANIMAL_KIND_LABEL: Record<AnimalKind, string> = { DOG: '犬', CAT: '猫', OTHER: 'その他' };
 
 // ---- ラベル ----
 export const SPECIES_LABEL: Record<Species, string> = { DOG: '犬', CAT: '猫' };

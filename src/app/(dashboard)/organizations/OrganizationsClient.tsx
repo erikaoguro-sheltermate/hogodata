@@ -4,14 +4,27 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardBody, Button, Badge, Field, Input, Select } from '@/components/ui';
-import { PREFECTURES, ORG_TYPES, prefectureByCode } from '@/lib/masters';
-import type { Organization } from '@/lib/types';
+import {
+  PREFECTURES, ORG_TYPES, prefectureByCode,
+  ANIMAL_HANDLING_OPTIONS, ANIMAL_KINDS, ACTIVITY_OPTIONS,
+} from '@/lib/masters';
+import type { Organization, AnimalKind } from '@/lib/types';
 import { saveOrganizationAction, type OrgInput } from './actions';
 
 const EMPTY: OrgInput = {
   name: '', prefectureCode: '13', orgType: 'NPO法人',
   contactName: '', contactEmail: '', isActive: true, notes: '',
+  establishedYear: null, animalHandling: '', animalTypes: [],
+  memberCount: null, volunteerCount: null, avgAnimalsManaged: null,
+  partnerMunicipalities: '', hasPartnerOrgs: null, activities: [],
 };
+
+// 数値入力 → number | null
+function num(v: string): number | null {
+  if (v.trim() === '') return null;
+  const n = Math.trunc(Number(v));
+  return Number.isNaN(n) ? null : Math.max(0, n);
+}
 
 export function OrganizationsClient({ organizations, canEdit }: { organizations: Organization[]; canEdit: boolean }) {
   const router = useRouter();
@@ -22,8 +35,23 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
 
   function openNew() { setForm(EMPTY); setEditing('new'); setMsg(null); }
   function openEdit(o: Organization) {
-    setForm({ name: o.name, prefectureCode: o.prefectureCode, orgType: o.orgType, contactName: o.contactName ?? '', contactEmail: o.contactEmail ?? '', isActive: o.isActive, notes: o.notes ?? '' });
+    setForm({
+      name: o.name, prefectureCode: o.prefectureCode, orgType: o.orgType,
+      contactName: o.contactName ?? '', contactEmail: o.contactEmail ?? '', isActive: o.isActive, notes: o.notes ?? '',
+      establishedYear: o.establishedYear ?? null, animalHandling: o.animalHandling ?? '', animalTypes: o.animalTypes ?? [],
+      memberCount: o.memberCount ?? null, volunteerCount: o.volunteerCount ?? null, avgAnimalsManaged: o.avgAnimalsManaged ?? null,
+      partnerMunicipalities: o.partnerMunicipalities ?? '', hasPartnerOrgs: o.hasPartnerOrgs ?? null, activities: o.activities ?? [],
+    });
     setEditing(o); setMsg(null);
+  }
+
+  function toggleAnimal(kind: AnimalKind) {
+    const cur = form.animalTypes ?? [];
+    setForm({ ...form, animalTypes: cur.includes(kind) ? cur.filter((k) => k !== kind) : [...cur, kind] });
+  }
+  function toggleActivity(a: string) {
+    const cur = form.activities ?? [];
+    setForm({ ...form, activities: cur.includes(a) ? cur.filter((x) => x !== a) : [...cur, a] });
   }
 
   async function save() {
@@ -75,6 +103,77 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
                 </Select>
               </Field>
             </div>
+
+            {/* 団体プロフィール */}
+            <div className="mt-6 border-t border-slate-100 pt-5">
+              <h4 className="mb-4 text-sm font-bold text-slate-700">団体プロフィール</h4>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <Field label="活動開始年">
+                  <Input type="number" min={1900} max={2027} value={form.establishedYear ?? ''} placeholder="2015"
+                    onChange={(e) => setForm({ ...form, establishedYear: num(e.target.value) })} />
+                </Field>
+                <Field label="動物取扱業">
+                  <Select value={form.animalHandling ?? ''} onChange={(e) => setForm({ ...form, animalHandling: e.target.value })}>
+                    <option value="">未選択</option>
+                    {ANIMAL_HANDLING_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </Select>
+                </Field>
+                <Field label="連携民間団体">
+                  <Select value={form.hasPartnerOrgs === null || form.hasPartnerOrgs === undefined ? '' : form.hasPartnerOrgs ? '1' : '0'}
+                    onChange={(e) => setForm({ ...form, hasPartnerOrgs: e.target.value === '' ? null : e.target.value === '1' })}>
+                    <option value="">未選択</option>
+                    <option value="1">あり</option>
+                    <option value="0">なし</option>
+                  </Select>
+                </Field>
+                <Field label="正規メンバー（人）">
+                  <Input type="number" min={0} value={form.memberCount ?? ''} onChange={(e) => setForm({ ...form, memberCount: num(e.target.value) })} />
+                </Field>
+                <Field label="ボランティア（人）">
+                  <Input type="number" min={0} value={form.volunteerCount ?? ''} onChange={(e) => setForm({ ...form, volunteerCount: num(e.target.value) })} />
+                </Field>
+                <Field label="平均管理頭数">
+                  <Input type="number" min={0} value={form.avgAnimalsManaged ?? ''} onChange={(e) => setForm({ ...form, avgAnimalsManaged: num(e.target.value) })} />
+                </Field>
+              </div>
+
+              <div className="mt-4">
+                <Field label="連携している自治体" hint="複数ある場合は読点で区切る（例：鹿児島県、鹿児島市）">
+                  <Input value={form.partnerMunicipalities ?? ''} onChange={(e) => setForm({ ...form, partnerMunicipalities: e.target.value })} />
+                </Field>
+              </div>
+
+              <div className="mt-4">
+                <span className="mb-2 block text-sm font-medium text-slate-700">保護している動物種</span>
+                <div className="flex flex-wrap gap-2">
+                  {ANIMAL_KINDS.map((k) => {
+                    const on = (form.animalTypes ?? []).includes(k.code);
+                    return (
+                      <button type="button" key={k.code} onClick={() => toggleAnimal(k.code)}
+                        className={on ? 'rounded-full bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white' : 'rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
+                        {k.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <span className="mb-2 block text-sm font-medium text-slate-700">主な活動内容（複数選択可）</span>
+                <div className="flex flex-wrap gap-2">
+                  {ACTIVITY_OPTIONS.map((a) => {
+                    const on = (form.activities ?? []).includes(a);
+                    return (
+                      <button type="button" key={a} onClick={() => toggleActivity(a)}
+                        className={on ? 'rounded-full bg-sky-600 px-3 py-1.5 text-sm font-medium text-white' : 'rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
+                        {a}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             {msg && <p className="mt-3 text-sm text-red-600">{msg}</p>}
             <div className="mt-4 flex gap-2">
               <Button onClick={save} disabled={busy}>{busy ? '保存中…' : '保存'}</Button>

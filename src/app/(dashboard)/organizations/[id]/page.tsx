@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getOrganization, listReports } from '@/lib/data/repo';
 import { Card, CardBody, Badge, StatCard, buttonClass, SectionTitle } from '@/components/ui';
-import { prefectureByCode, STATUS_LABEL } from '@/lib/masters';
+import { prefectureByCode, STATUS_LABEL, ANIMAL_KIND_LABEL } from '@/lib/masters';
 import { formatDate } from '@/lib/format';
 import type { MonthlyReport, Species, ReportStatus } from '@/lib/types';
 
@@ -11,6 +11,15 @@ const FISCAL_MONTHS: { year: number; month: number }[] = [
   ...[4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => ({ year: 2026, month: m })),
   ...[1, 2, 3].map((m) => ({ year: 2027, month: m })),
 ];
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs text-slate-400">{label}</dt>
+      <dd className="mt-0.5 text-sm text-slate-700">{value}</dd>
+    </div>
+  );
+}
 
 function StatusCell({ report, href }: { report: MonthlyReport | undefined; href: string }) {
   if (!report) {
@@ -71,6 +80,44 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
         <StatCard label="下書き" value={draftCount} accent="slate" />
         <StatCard label="未提出（年度内）" value={unsubmittedSlots} accent="amber" sub={`全 ${totalSlots} 枠中`} />
         <StatCard label="直近の提出" value={latestSubmitted ? formatDate(latestSubmitted.submittedAt) : '—'} accent="sky" />
+      </div>
+
+      {/* 団体プロフィール */}
+      <div className="mt-8">
+        <SectionTitle subtitle="団体登録時の情報">団体プロフィール</SectionTitle>
+        <Card>
+          <CardBody>
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
+              <Info label="活動開始年" value={org.establishedYear ? `${org.establishedYear}年` : '—'} />
+              <Info label="動物取扱業" value={org.animalHandling || '—'} />
+              <Info label="連絡先メール" value={org.contactEmail || '—'} />
+              <Info label="正規メンバー" value={org.memberCount != null ? `${org.memberCount} 人` : '—'} />
+              <Info label="ボランティア" value={org.volunteerCount != null ? `${org.volunteerCount} 人` : '—'} />
+              <Info label="平均管理頭数" value={org.avgAnimalsManaged != null ? `${org.avgAnimalsManaged} 頭` : '—'} />
+              <Info label="連携している自治体" value={org.partnerMunicipalities || '—'} />
+              <Info label="連携している民間団体" value={org.hasPartnerOrgs == null ? '—' : org.hasPartnerOrgs ? 'あり' : 'なし'} />
+            </dl>
+
+            <div className="mt-5 grid grid-cols-1 gap-4 border-t border-slate-100 pt-4 md:grid-cols-2">
+              <div>
+                <div className="mb-2 text-xs text-slate-400">保護している動物種</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {(org.animalTypes ?? []).length === 0
+                    ? <span className="text-sm text-slate-400">—</span>
+                    : (org.animalTypes ?? []).map((k) => <Badge key={k} color="green">{ANIMAL_KIND_LABEL[k]}</Badge>)}
+                </div>
+              </div>
+              <div>
+                <div className="mb-2 text-xs text-slate-400">主な活動内容</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {(org.activities ?? []).length === 0
+                    ? <span className="text-sm text-slate-400">—</span>
+                    : (org.activities ?? []).map((a) => <Badge key={a} color="blue">{a}</Badge>)}
+                </div>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
       </div>
 
       <div className="mt-8">

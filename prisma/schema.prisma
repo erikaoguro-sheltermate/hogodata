@@ -63,6 +63,18 @@ model Organization {
   contactEmail String?
   isActive     Boolean         @default(true)
   notes        String?
+
+  // 団体プロフィール（登録フォーム項目）
+  establishedYear       Int? // 活動開始年
+  animalHandling        String? // 動物取扱業の区分
+  animalTypes           String[] @default([]) // 保護している動物種（DOG/CAT/OTHER）
+  memberCount           Int? // 正規メンバーの人数
+  volunteerCount        Int? // ボランティアの人数
+  avgAnimalsManaged     Int? // 管理している動物の平均頭数
+  partnerMunicipalities String? // 連携している自治体（自由記述）
+  hasPartnerOrgs        Boolean? // 連携している民間団体の有無
+  activities            String[] @default([]) // 主な活動内容
+
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   profiles     Profile[]
