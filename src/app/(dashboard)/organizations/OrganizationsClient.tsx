@@ -32,6 +32,7 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
   const [form, setForm] = React.useState<OrgInput>(EMPTY);
   const [busy, setBusy] = React.useState(false);
   const [msg, setMsg] = React.useState<string | null>(null);
+  const [customActivity, setCustomActivity] = React.useState('');
 
   function openNew() { setForm(EMPTY); setEditing('new'); setMsg(null); }
   function openEdit(o: Organization) {
@@ -52,6 +53,13 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
   function toggleActivity(a: string) {
     const cur = form.activities ?? [];
     setForm({ ...form, activities: cur.includes(a) ? cur.filter((x) => x !== a) : [...cur, a] });
+  }
+  function addCustomActivity() {
+    const v = customActivity.trim();
+    if (!v) return;
+    const cur = form.activities ?? [];
+    if (!cur.includes(v)) setForm({ ...form, activities: [...cur, v] });
+    setCustomActivity('');
   }
 
   async function save() {
@@ -159,7 +167,7 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
               </div>
 
               <div className="mt-4">
-                <span className="mb-2 block text-sm font-medium text-slate-700">主な活動内容（複数選択可）</span>
+                <span className="mb-2 block text-sm font-medium text-slate-700">主な活動内容（複数選択可・自由記入も可）</span>
                 <div className="flex flex-wrap gap-2">
                   {ACTIVITY_OPTIONS.map((a) => {
                     const on = (form.activities ?? []).includes(a);
@@ -170,6 +178,19 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
                       </button>
                     );
                   })}
+                  {/* プリセット外（自由記入で追加された）活動 */}
+                  {(form.activities ?? []).filter((a) => !ACTIVITY_OPTIONS.includes(a)).map((a) => (
+                    <button type="button" key={a} onClick={() => toggleActivity(a)}
+                      className="inline-flex items-center gap-1 rounded-full bg-sky-600 px-3 py-1.5 text-sm font-medium text-white">
+                      {a} <span className="text-sky-200">×</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <Input value={customActivity} placeholder="その他の活動を自由に入力"
+                    onChange={(e) => setCustomActivity(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomActivity(); } }} />
+                  <Button type="button" variant="secondary" size="sm" onClick={addCustomActivity}>追加</Button>
                 </div>
               </div>
             </div>
