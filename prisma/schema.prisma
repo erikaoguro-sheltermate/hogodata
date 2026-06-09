@@ -1,0 +1,202 @@
+// JASA Data Hub — Prisma スキーマ（詳細仕様書 §3 が正本）
+// 本番DBは PostgreSQL(Supabase)。`prisma migrate` でスキーマ管理する。
+// RLS は Prisma 管理外のため prisma/rls.sql を別途適用する（仕様書 §7）。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========== 列挙 ==========
+enum Role {
+  ADMIN // 事務局
+  ORG_USER // 団体
+  VIEWER // 閲覧
+}
+
+enum Species {
+  DOG
+  CAT
+}
+
+// 県内 / 県外：隣接 / 県外：遠隔 / なし（センチネル）
+// PostgreSQL のユニークindexはNULLを互いに異なる値として扱い重複を防げないため、
+// region を持たない明細には NONE を入れて @@unique を機能させる（仕様書 §3 実装注意）。
+enum Region {
+  IN_PREF
+  ADJACENT
+  DISTANT
+  NONE
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  CONFIRMED
+}
+
+// ========== ユーザー ==========
+// 認証本体は Supabase Auth が持つ。profile でロールと所属団体を管理。
+model Profile {
+  id             String        @id // Supabase auth.users.id と一致
+  email          String        @unique
+  displayName    String
+  role           Role          @default(ORG_USER)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime      @default(now())
+  auditLogs      AuditLog[]
+}
+
+// ========== 団体マスタ ==========
+model Organization {
+  id           String          @id @default(cuid())
+  name         String // 内部管理用（外部公開しない）
+  prefectureId String
+  prefecture   Prefecture      @relation(fields: [prefectureId], references: [id])
+  orgType      String // NPO法人 / 任意団体 / 個人活動者 / フォスター 等
+  contactName  String?
+  contactEmail String?
+  isActive     Boolean         @default(true)
+  notes        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  profiles     Profile[]
+  reports      MonthlyReport[]
+
+  @@index([prefectureId])
+}
+
+// ========== 月次レポート（記録の単位） ==========
+model MonthlyReport {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  species        Species
+  year           Int
+  month          Int
+  periodStart    DateTime
+  periodEnd      DateTime
+
+  // 現在の管理頭数。foster は「そのうち一時預かり先」内数。
+  beginningCount       Int @default(0)
+  beginningFosterCount Int @default(0)
+  endingCount          Int @default(0)
+  endingFosterCount    Int @default(0)
+
+  status      ReportStatus @default(DRAFT)
+  submittedAt DateTime?
+  enteredById String? // 代行入力した事務局ユーザー
+  note        String?
+  isActive    Boolean      @default(true) // 論理削除
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  intakeEntries  IntakeEntry[]
+  outcomeEntries OutcomeEntry[]
+  tnrEntry       TnrEntry? // 猫のみ
+
+  @@unique([organizationId, species, year, month])
+  @@index([year, month, species])
+}
+
+// ========== 収容明細 ==========
+model IntakeEntry {
+  id               String         @id @default(cuid())
+  reportId         String
+  report           MonthlyReport  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  intakeCategoryId String
+  intakeCategory   IntakeCategory @relation(fields: [intakeCategoryId], references: [id])
+  ageGroupId       String
+  ageGroup         AgeGroup       @relation(fields: [ageGroupId], references: [id])
+  region           Region         @default(NONE)
+  count            Int            @default(0)
+
+  @@unique([reportId, intakeCategoryId, ageGroupId, region])
+}
+
+// ========== 転帰明細 ==========
+model OutcomeEntry {
+  id                String          @id @default(cuid())
+  reportId          String
+  report            MonthlyReport   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  outcomeCategoryId String
+  outcomeCategory   OutcomeCategory @relation(fields: [outcomeCategoryId], references: [id])
+  ageGroupId        String
+  ageGroup          AgeGroup        @relation(fields: [ageGroupId], references: [id])
+  region            Region          @default(NONE)
+  count             Int             @default(0)
+
+  @@unique([reportId, outcomeCategoryId, ageGroupId, region])
+}
+
+// ========== TNR（猫のみ・実施団体のみ） ==========
+model TnrEntry {
+  id                 String        @id @default(cuid())
+  reportId           String        @unique
+  report             MonthlyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  periodStart        DateTime?
+  periodEnd          DateTime?
+  soloCount          Int           @default(0) // 団体が単独で実施（匹）
+  collaborativeCount Int           @default(0) // 他団体と協力して実施（匹）
+}
+
+// ========== マスタ（編集可能） ==========
+model IntakeCategory {
+  id             String        @id @default(cuid())
+  code           String        @unique
+  name           String
+  requiresRegion Boolean       @default(false)
+  species        Species? // null=共通、CAT=猫のみ（FROM_TNR）
+  sortOrder      Int           @default(0)
+  isActive       Boolean       @default(true)
+  entries        IntakeEntry[]
+}
+
+model OutcomeCategory {
+  id             String         @id @default(cuid())
+  code           String         @unique
+  name           String
+  isLiveOutcome  Boolean        @default(true)
+  requiresRegion Boolean        @default(false)
+  species        Species? // null=共通、CAT=猫のみ（OUTDOOR_RELEASE）
+  sortOrder      Int            @default(0)
+  isActive       Boolean        @default(true)
+  entries        OutcomeEntry[]
+}
+
+model AgeGroup {
+  id             String         @id @default(cuid())
+  code           String         @unique
+  name           String
+  sortOrder      Int            @default(0)
+  isActive       Boolean        @default(true)
+  intakeEntries  IntakeEntry[]
+  outcomeEntries OutcomeEntry[]
+}
+
+model Prefecture {
+  id            String         @id @default(cuid())
+  code          String         @unique // JIS都道府県コード
+  name          String
+  region        String // 地方ブロック（集計用）
+  organizations Organization[]
+}
+
+// ========== 監査ログ ==========
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     Profile  @relation(fields: [actorId], references: [id])
+  action    String // CREATE / UPDATE / DELETE / SUBMIT
+  entity    String
+  entityId  String
+  diff      Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+}

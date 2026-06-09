@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JASA Data Hub（どうぶつ保護データプロジェクト）
 
-## Getting Started
+民間動物保護団体の **月次データ（新規収容・転帰・管理頭数・TNR）** を統一フォーマットで
+集計・可視化・還元する、JASA事務局向けの B2B データ収集 SaaS。
 
-First, run the development server:
+> 米国・カナダの Shelter Animals Count を参考に、日本の現場に即して項目設計。
+> 比較・評価を目的とせず、現場の振り返りと政策・支援の意思決定に役立てることを目的とする。
+
+## クイックスタート
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+DBなしでそのまま起動できます（シード済みのインメモリデータ）。
+画面左下の「表示ロール」で **事務局 / 団体 / 閲覧者** を切り替えてデモできます。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 主な画面
+| パス | 内容 |
+|------|------|
+| `/` | ダッシュボード（当月の入力状況・未提出団体） |
+| `/reports` | 月次レポート一覧（フィルタ・ステータス） |
+| `/reports/new` | 月次レポート入力（マトリクス + 収支整合パネル） |
+| `/organizations` | 団体マスタ管理 |
+| `/analytics` | 集計ダッシュボード（収容/転帰/推移） |
+| `/masters` | マスタ管理 |
+| `/settings/users` | ユーザー・権限 |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## コマンド
+```bash
+npm run dev        # 開発サーバー
+npm run build      # 本番ビルド
+npm run typecheck  # 型チェック
+npm run test       # バリデーション単体テスト（Vitest）
+```
 
-## Learn More
+## ドキュメント
+- [docs/requirements.md](docs/requirements.md) — 要件定義（何を/なぜ）
+- [docs/spec.md](docs/spec.md) — 詳細仕様（どう作るか・正本）
+- [CLAUDE.md](CLAUDE.md) — 実装状況・設計・本番DB接続手順
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 技術スタック
+Next.js 16 / React 19 / TypeScript / Tailwind v4 / Recharts /
+Prisma + PostgreSQL(Supabase) / Supabase Auth + RLS / Vercel / Vitest
