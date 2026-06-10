@@ -33,7 +33,7 @@ Vitest（バリデーション単体テスト）。
 | F-09 CSVエクスポート | ✅ `/api/exports/reports` |
 | F-11 ユーザー・権限 | ✅ `/settings/users`（ロール定義・境界） |
 | F-13 マスタ管理 | ✅ `/masters`（閲覧。編集はM後続） |
-| F-01 認証 | ✅ 配線済み。Supabase設定で実認証／未設定はデモのロール切替 |
+| F-01 認証 | ✅ 共有パスワードゲート（`APP_PASSWORD`・運営向け）。`src/middleware.ts` |
 | 本番DB | ✅ 配線済み。`DATABASE_URL` で Prisma に自動切替（`src/lib/data/`） |
 | RLS | ✅ `prisma/rls.sql` 用意済み。手順書どおり適用すれば有効 |
 | F-08 Excel取込 / F-10 還元PDF | ⏳ M4（将来） |

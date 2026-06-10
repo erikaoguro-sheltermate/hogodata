@@ -1,21 +1,15 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
 import { Card, CardBody, Button } from '@/components/ui';
-import type { Role } from '@/lib/types';
+import { DemoRoleButtons } from './DemoRoleButtons';
+import { gateLogin } from './actions';
 
-const ROLES: { role: Role; label: string; desc: string }[] = [
-  { role: 'ADMIN', label: 'JASA事務局として入る', desc: '全団体の代行入力・集計・管理' },
-  { role: 'ORG_USER', label: '団体ユーザーとして入る', desc: '自団体のデータ入力・閲覧' },
-  { role: 'VIEWER', label: '閲覧者として入る', desc: '集計ダッシュボードの閲覧のみ' },
-];
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const sp = await searchParams;
+  const gated = !!process.env.APP_PASSWORD;
 
-export default function LoginPage() {
-  const router = useRouter();
-  function enter(role: Role) {
-    document.cookie = `jasa_role=${role}; path=/; max-age=31536000`;
-    router.push('/');
-  }
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-emerald-50 to-slate-50 p-6">
       <div className="w-full max-w-md">
@@ -25,18 +19,24 @@ export default function LoginPage() {
           <p className="mt-1 text-sm text-slate-500">どうぶつ保護データプロジェクト</p>
         </div>
         <Card>
-          <CardBody className="space-y-3">
-            <p className="text-center text-xs text-slate-400">
-              デモ環境です。本番は Supabase Auth（メール / マジックリンク）でログインします。
-            </p>
-            {ROLES.map((r) => (
-              <button key={r.role} onClick={() => enter(r.role)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-left transition-colors hover:border-emerald-300 hover:bg-emerald-50">
-                <div className="text-sm font-semibold text-slate-700">{r.label}</div>
-                <div className="text-xs text-slate-400">{r.desc}</div>
-              </button>
-            ))}
-            <Button className="w-full" onClick={() => enter('ADMIN')}>事務局でそのまま開始</Button>
+          <CardBody>
+            {gated ? (
+              <form action={gateLogin} className="space-y-3">
+                <p className="text-center text-sm text-slate-500">運営パスワードを入力してください</p>
+                {sp.error && (
+                  <p className="rounded-lg bg-red-50 px-3 py-2 text-center text-sm text-red-600">
+                    パスワードが正しくありません
+                  </p>
+                )}
+                <input
+                  type="password" name="password" required autoFocus placeholder="パスワード"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+                <Button type="submit" className="w-full">ログイン</Button>
+              </form>
+            ) : (
+              <DemoRoleButtons />
+            )}
           </CardBody>
         </Card>
       </div>
