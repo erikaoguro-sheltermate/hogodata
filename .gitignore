@@ -42,3 +42,6 @@ next-env.d.ts
 
 # allow example env
 !.env.example
+
+# 個人情報を含む一回限りのインポートスクリプト（コミットしない）
+scripts/import-orgs.mjs
