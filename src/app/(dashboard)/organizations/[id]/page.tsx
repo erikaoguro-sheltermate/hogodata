@@ -89,11 +89,11 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
           <CardBody>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
               <Info label="活動開始年" value={org.establishedYear ? `${org.establishedYear}年` : '—'} />
-              <Info label="動物取扱業" value={org.animalHandling || '—'} />
+              <Info label="動物取扱業" value={(org.animalHandling ?? []).join('・') || '—'} />
               <Info label="連絡先メール" value={org.contactEmail || '—'} />
               <Info label="正規メンバー" value={org.memberCount != null ? `${org.memberCount} 人` : '—'} />
               <Info label="ボランティア" value={org.volunteerCount != null ? `${org.volunteerCount} 人` : '—'} />
-              <Info label="平均管理頭数" value={org.avgAnimalsManaged != null ? `${org.avgAnimalsManaged} 頭` : '—'} />
+              <Info label="平均管理頭数" value={org.avgAnimalsManaged || '—'} />
               <Info label="連携している自治体" value={org.partnerMunicipalities || '—'} />
               <Info label="連携している民間団体" value={org.hasPartnerOrgs == null ? '—' : org.hasPartnerOrgs ? 'あり' : 'なし'} />
             </dl>

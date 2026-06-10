@@ -61,11 +61,11 @@ export interface Organization {
   notes?: string | null;
   // ---- 団体プロフィール（登録フォーム項目）----
   establishedYear?: number | null;        // 活動開始年
-  animalHandling?: string | null;         // 動物取扱業の区分
+  animalHandling?: string[];              // 動物取扱業の区分（複数選択）
   animalTypes?: AnimalKind[];             // 保護している動物種（複数）
   memberCount?: number | null;            // 正規メンバーの人数
   volunteerCount?: number | null;         // ボランティアの人数
-  avgAnimalsManaged?: number | null;      // 管理している動物の平均頭数
+  avgAnimalsManaged?: string | null;      // 管理している動物の平均頭数（範囲）
   partnerMunicipalities?: string | null;  // 連携している自治体（自由記述）
   hasPartnerOrgs?: boolean | null;        // 連携している民間団体の有無
   activities?: string[];                  // 主な活動内容（複数選択）

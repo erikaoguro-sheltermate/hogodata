@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardBody, Button, Badge, Field, Input, Select } from '@/components/ui';
 import {
   PREFECTURES, ORG_TYPES, prefectureByCode,
-  ANIMAL_HANDLING_OPTIONS, ANIMAL_KINDS, ACTIVITY_OPTIONS,
+  ANIMAL_HANDLING_OPTIONS, ANIMAL_COUNT_RANGES, ANIMAL_KINDS, ACTIVITY_OPTIONS,
 } from '@/lib/masters';
 import type { Organization, AnimalKind } from '@/lib/types';
 import { saveOrganizationAction, type OrgInput } from './actions';
@@ -14,7 +14,7 @@ import { saveOrganizationAction, type OrgInput } from './actions';
 const EMPTY: OrgInput = {
   name: '', prefectureCode: '13', orgType: 'NPO法人',
   contactName: '', contactEmail: '', isActive: true, notes: '',
-  establishedYear: null, animalHandling: '', animalTypes: [],
+  establishedYear: null, animalHandling: [], animalTypes: [],
   memberCount: null, volunteerCount: null, avgAnimalsManaged: null,
   partnerMunicipalities: '', hasPartnerOrgs: null, activities: [],
 };
@@ -39,7 +39,7 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
     setForm({
       name: o.name, prefectureCode: o.prefectureCode, orgType: o.orgType,
       contactName: o.contactName ?? '', contactEmail: o.contactEmail ?? '', isActive: o.isActive, notes: o.notes ?? '',
-      establishedYear: o.establishedYear ?? null, animalHandling: o.animalHandling ?? '', animalTypes: o.animalTypes ?? [],
+      establishedYear: o.establishedYear ?? null, animalHandling: o.animalHandling ?? [], animalTypes: o.animalTypes ?? [],
       memberCount: o.memberCount ?? null, volunteerCount: o.volunteerCount ?? null, avgAnimalsManaged: o.avgAnimalsManaged ?? null,
       partnerMunicipalities: o.partnerMunicipalities ?? '', hasPartnerOrgs: o.hasPartnerOrgs ?? null, activities: o.activities ?? [],
     });
@@ -49,6 +49,10 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
   function toggleAnimal(kind: AnimalKind) {
     const cur = form.animalTypes ?? [];
     setForm({ ...form, animalTypes: cur.includes(kind) ? cur.filter((k) => k !== kind) : [...cur, kind] });
+  }
+  function toggleHandling(h: string) {
+    const cur = form.animalHandling ?? [];
+    setForm({ ...form, animalHandling: cur.includes(h) ? cur.filter((x) => x !== h) : [...cur, h] });
   }
   function toggleActivity(a: string) {
     const cur = form.activities ?? [];
@@ -120,10 +124,10 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
                   <Input type="number" min={1900} max={2027} value={form.establishedYear ?? ''} placeholder="2015"
                     onChange={(e) => setForm({ ...form, establishedYear: num(e.target.value) })} />
                 </Field>
-                <Field label="動物取扱業">
-                  <Select value={form.animalHandling ?? ''} onChange={(e) => setForm({ ...form, animalHandling: e.target.value })}>
+                <Field label="平均管理頭数">
+                  <Select value={form.avgAnimalsManaged ?? ''} onChange={(e) => setForm({ ...form, avgAnimalsManaged: e.target.value || null })}>
                     <option value="">未選択</option>
-                    {ANIMAL_HANDLING_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                    {ANIMAL_COUNT_RANGES.map((r) => <option key={r} value={r}>{r}</option>)}
                   </Select>
                 </Field>
                 <Field label="連携民間団体">
@@ -140,15 +144,27 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
                 <Field label="ボランティア（人）">
                   <Input type="number" min={0} value={form.volunteerCount ?? ''} onChange={(e) => setForm({ ...form, volunteerCount: num(e.target.value) })} />
                 </Field>
-                <Field label="平均管理頭数">
-                  <Input type="number" min={0} value={form.avgAnimalsManaged ?? ''} onChange={(e) => setForm({ ...form, avgAnimalsManaged: num(e.target.value) })} />
-                </Field>
               </div>
 
               <div className="mt-4">
                 <Field label="連携している自治体" hint="複数ある場合は読点で区切る（例：鹿児島県、鹿児島市）">
                   <Input value={form.partnerMunicipalities ?? ''} onChange={(e) => setForm({ ...form, partnerMunicipalities: e.target.value })} />
                 </Field>
+              </div>
+
+              <div className="mt-4">
+                <span className="mb-2 block text-sm font-medium text-slate-700">動物取扱業（複数選択可）</span>
+                <div className="flex flex-wrap gap-2">
+                  {ANIMAL_HANDLING_OPTIONS.map((h) => {
+                    const on = (form.animalHandling ?? []).includes(h);
+                    return (
+                      <button type="button" key={h} onClick={() => toggleHandling(h)}
+                        className={on ? 'rounded-full bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white' : 'rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
+                        {h}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="mt-4">

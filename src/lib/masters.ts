@@ -72,9 +72,13 @@ export const ORG_TYPES = ['NPO法人', '一般社団法人', '任意団体', '�
 export const ANIMAL_HANDLING_OPTIONS = [
   '第一種動物取扱業（登録）',
   '第二種動物取扱業（届出）',
+  '届出予定',
   '登録・届出なし',
   '不明',
 ];
+
+// 管理している動物の平均頭数（範囲・プルダウン）
+export const ANIMAL_COUNT_RANGES = ['0〜50匹', '51〜100匹', '101〜200匹', '201匹〜'];
 
 export const ANIMAL_KINDS: { code: AnimalKind; name: string }[] = [
   { code: 'DOG', name: '犬' },
@@ -83,15 +87,13 @@ export const ANIMAL_KINDS: { code: AnimalKind; name: string }[] = [
 ];
 
 export const ACTIVITY_OPTIONS = [
-  '保護・譲渡',
+  '行政施設からの引き出し',
+  '飼い主からの引き取り依頼への対応',
   'TNR活動',
-  '一時預かり（フォスター）',
-  '医療・ケア',
-  '多頭飼育崩壊対応',
-  '普及啓発・教育',
-  '災害時対応',
-  '行政連携',
-  'その他',
+  '高齢動物の保護、引き取り',
+  '多頭飼育崩壊への介入',
+  '繁殖引退動物、ペットショップ、ブリーダーからの引き取り',
+  '離乳前のミルクボランティア',
 ];
 
 export const ANIMAL_KIND_LABEL: Record<AnimalKind, string> = { DOG: '犬', CAT: '猫', OTHER: 'その他' };
