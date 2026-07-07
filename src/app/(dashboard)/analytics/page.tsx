@@ -46,8 +46,9 @@ export default async function AnalyticsPage({
             {isAdmin(session) ? '全団体の匿名集計' : '匿名集計（団体個別の値は表示されません）'}
           </p>
         </div>
-        <div className="flex gap-2">
-          <a href={`/api/exports/summary?period=${period}&${exportQs.toString()}`} className={buttonClass('primary')}>⬇ 期間集計CSV</a>
+        <div className="flex flex-wrap gap-2">
+          <a href={`/report?period=${period}&${exportQs.toString()}`} className={buttonClass('primary')}>📄 PDFレポート</a>
+          <a href={`/api/exports/summary?period=${period}&${exportQs.toString()}`} className={buttonClass('secondary')}>⬇ 期間集計CSV</a>
           <a href={`/api/exports/reports?${exportQs.toString()}`} className={buttonClass('secondary')}>⬇ 生データCSV</a>
         </div>
       </div>
