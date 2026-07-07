@@ -39,6 +39,26 @@ export interface Summary {
   catReports: number;
 }
 
+/** 現在の管理頭数：各団体×種別の「最新レポートの記録終了時頭数」の合計（スナップショット） */
+export interface ManagedCount { total: number; foster: number; dog: number; cat: number; orgCount: number }
+export function currentManagedCount(reports: MonthlyReport[]): ManagedCount {
+  const latest = new Map<string, MonthlyReport>();
+  for (const r of reports) {
+    const key = `${r.organizationId}:${r.species}`;
+    const cur = latest.get(key);
+    if (!cur || r.year > cur.year || (r.year === cur.year && r.month > cur.month)) latest.set(key, r);
+  }
+  const orgs = new Set<string>();
+  let total = 0, foster = 0, dog = 0, cat = 0;
+  for (const r of latest.values()) {
+    total += r.endingCount;
+    foster += r.endingFosterCount;
+    if (r.species === 'DOG') dog += r.endingCount; else cat += r.endingCount;
+    orgs.add(r.organizationId);
+  }
+  return { total, foster, dog, cat, orgCount: orgs.size };
+}
+
 export function reportIntakeTotal(r: MonthlyReport): number {
   return sumIntake(r.intakeEntries);
 }

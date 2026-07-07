@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { listReports, type ReportFilter } from '@/lib/data/repo';
-import { summarize, summarizeByPeriod, type PeriodType } from '@/lib/data/analytics';
+import { summarize, summarizeByPeriod, currentManagedCount, type PeriodType } from '@/lib/data/analytics';
 import { getSession, isAdmin } from '@/lib/auth/session';
 import { Card, CardBody, StatCard, buttonClass, SectionTitle, Badge } from '@/components/ui';
 import { REGION_BLOCKS } from '@/lib/masters';
@@ -27,6 +27,7 @@ export default async function AnalyticsPage({
   const reports = await listReports(filter);
   const summary = summarize(reports);
   const periods = summarizeByPeriod(reports, period);
+  const managed = currentManagedCount(reports);
   // 推移グラフは常に「月次」で表示（期間切替は表・エクスポート用）
   const monthlyTrend = summarizeByPeriod(reports, 'month').map((p) => ({ key: p.key, label: p.label, intake: p.intakeTotal, outcome: p.outcomeTotal }));
 
@@ -86,6 +87,24 @@ export default async function AnalyticsPage({
         <button type="submit" className={buttonClass('secondary', 'sm')}>絞り込み</button>
         <Link href={`/analytics?period=${period}`} className={buttonClass('ghost', 'sm')}>クリア</Link>
       </form>
+
+      {/* 現在の管理頭数（スナップショット） */}
+      <Card className="mb-4 border-2 border-emerald-200">
+        <CardBody className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-sm text-slate-500">現在の管理頭数（各団体の最新レポート時点）</div>
+            <div className="mt-1 text-3xl font-bold tabular-nums text-emerald-700">
+              {formatNumber(managed.total)}<span className="ml-1 text-base font-medium text-slate-500">頭</span>
+            </div>
+          </div>
+          <div className="flex gap-6 text-sm">
+            <div><span className="text-slate-400">犬</span> <span className="font-semibold tabular-nums text-slate-700">{formatNumber(managed.dog)}</span></div>
+            <div><span className="text-slate-400">猫</span> <span className="font-semibold tabular-nums text-slate-700">{formatNumber(managed.cat)}</span></div>
+            <div><span className="text-slate-400">うち一時預かり</span> <span className="font-semibold tabular-nums text-slate-700">{formatNumber(managed.foster)}</span></div>
+            <div><span className="text-slate-400">対象</span> <span className="font-semibold tabular-nums text-slate-700">{managed.orgCount}</span> <span className="text-slate-400">団体</span></div>
+          </div>
+        </CardBody>
+      </Card>
 
       {/* サマリー */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
