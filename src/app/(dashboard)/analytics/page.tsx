@@ -3,13 +3,12 @@ import { listReports, type ReportFilter } from '@/lib/data/repo';
 import { summarize, summarizeByPeriod, type PeriodType } from '@/lib/data/analytics';
 import { getSession, isAdmin } from '@/lib/auth/session';
 import { Card, CardBody, StatCard, buttonClass, SectionTitle, Badge } from '@/components/ui';
-import { REGION_BLOCKS, OUTCOME_CATEGORIES } from '@/lib/masters';
+import { REGION_BLOCKS } from '@/lib/masters';
 import { formatNumber } from '@/lib/format';
 import type { Species } from '@/lib/types';
 import { IntakeByCategoryChart, OutcomeByCategoryChart, TrendChart } from './AnalyticsCharts';
 
 const inputCls = 'rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm';
-const liveCodes = OUTCOME_CATEGORIES.filter((c) => c.isLiveOutcome).map((c) => c.code);
 const PERIOD_LABEL: Record<PeriodType, string> = { month: '月次', quarter: '四半期', year: '年次' };
 
 export default async function AnalyticsPage({
@@ -28,7 +27,8 @@ export default async function AnalyticsPage({
   const reports = await listReports(filter);
   const summary = summarize(reports);
   const periods = summarizeByPeriod(reports, period);
-  const trend = periods.map((p) => ({ key: p.key, label: p.label, intake: p.intakeTotal, outcome: p.outcomeTotal }));
+  // 推移グラフは常に「月次」で表示（期間切替は表・エクスポート用）
+  const monthlyTrend = summarizeByPeriod(reports, 'month').map((p) => ({ key: p.key, label: p.label, intake: p.intakeTotal, outcome: p.outcomeTotal }));
 
   // 現在のフィルタを維持したエクスポートURL
   const exportQs = new URLSearchParams();
@@ -135,11 +135,11 @@ export default async function AnalyticsPage({
 
       {/* 推移・構成 */}
       <div className="mt-6">
-        <TrendChart data={trend} />
+        <TrendChart data={monthlyTrend} />
       </div>
       <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <IntakeByCategoryChart data={summary.intakeByCategory} />
-        <OutcomeByCategoryChart data={summary.outcomeByCategory} liveCodes={liveCodes} />
+        <IntakeByCategoryChart data={summary.intakeByCategoryAge} />
+        <OutcomeByCategoryChart data={summary.outcomeByCategoryAge} />
       </div>
 
       <p className="mt-6 text-xs text-slate-400">

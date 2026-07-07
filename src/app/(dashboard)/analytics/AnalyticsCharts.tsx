@@ -2,26 +2,38 @@
 
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-  LineChart, Line, Legend, Cell,
+  LineChart, Line, Legend,
 } from 'recharts';
 import { Card, CardBody } from '@/components/ui';
 import type { Summary } from '@/lib/data/analytics';
 
 const AXIS = { fontSize: 12, fill: '#64748b' };
 
-export function IntakeByCategoryChart({ data }: { data: Summary['intakeByCategory'] }) {
+// 年齢区分の色（収容・転帰で共通）
+const AGE = [
+  { key: 'u5m', name: '〜5ヶ月齢', color: '#34d399' },
+  { key: 'm5_10y', name: '5ヶ月〜10歳', color: '#0ea5e9' },
+  { key: 'o10y', name: '10歳〜', color: '#a78bfa' },
+] as const;
+
+function StackedByAge({ title, data, note }: { title: string; data: Summary['intakeByCategoryAge']; note?: string }) {
   return (
     <Card>
       <CardBody>
-        <h3 className="mb-3 text-sm font-bold text-slate-700">収容ルート別の構成</h3>
+        <h3 className="mb-1 text-sm font-bold text-slate-700">{title}</h3>
+        {note && <p className="mb-2 text-xs text-slate-400">{note}</p>}
         {data.length === 0 ? <Empty /> : (
-          <ResponsiveContainer width="100%" height={Math.max(160, data.length * 38)}>
+          <ResponsiveContainer width="100%" height={Math.max(180, data.length * 42)}>
             <BarChart data={data} layout="vertical" margin={{ left: 16, right: 16 }}>
               <CartesianGrid horizontal={false} stroke="#f1f5f9" />
               <XAxis type="number" tick={AXIS} />
               <YAxis type="category" dataKey="name" width={140} tick={AXIS} />
               <Tooltip />
-              <Bar dataKey="count" name="頭数" fill="#0ea5e9" radius={[0, 6, 6, 0]} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              {AGE.map((a, i) => (
+                <Bar key={a.key} dataKey={a.key} name={a.name} stackId="age" fill={a.color}
+                  radius={i === AGE.length - 1 ? [0, 6, 6, 0] : [0, 0, 0, 0]} />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -30,29 +42,12 @@ export function IntakeByCategoryChart({ data }: { data: Summary['intakeByCategor
   );
 }
 
-export function OutcomeByCategoryChart({ data, liveCodes }: { data: Summary['outcomeByCategory']; liveCodes: string[] }) {
-  return (
-    <Card>
-      <CardBody>
-        <h3 className="mb-3 text-sm font-bold text-slate-700">転帰別の構成（緑=生存 / 赤=非生存）</h3>
-        {data.length === 0 ? <Empty /> : (
-          <ResponsiveContainer width="100%" height={Math.max(160, data.length * 38)}>
-            <BarChart data={data} layout="vertical" margin={{ left: 16, right: 16 }}>
-              <CartesianGrid horizontal={false} stroke="#f1f5f9" />
-              <XAxis type="number" tick={AXIS} />
-              <YAxis type="category" dataKey="name" width={140} tick={AXIS} />
-              <Tooltip />
-              <Bar dataKey="count" name="頭数" radius={[0, 6, 6, 0]}>
-                {data.map((d) => (
-                  <Cell key={d.code} fill={liveCodes.includes(d.code) ? '#10b981' : '#f87171'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </CardBody>
-    </Card>
-  );
+export function IntakeByCategoryChart({ data }: { data: Summary['intakeByCategoryAge'] }) {
+  return <StackedByAge title="収容ルート別の構成（年齢区分の内訳）" data={data} />;
+}
+
+export function OutcomeByCategoryChart({ data }: { data: Summary['outcomeByCategoryAge'] }) {
+  return <StackedByAge title="転帰別の構成（年齢区分の内訳）" data={data} note="上から順に 死亡・行方不明・安楽死（非生存）→ 譲渡・返還ほか（生存）" />;
 }
 
 export function TrendChart({ data }: { data: Summary['trend'] }) {

@@ -8,6 +8,17 @@ import { ymLabel, liveReleaseRate } from '../format';
 
 export interface CategoryCount { code: string; name: string; count: number }
 export interface TrendPoint { key: string; label: string; intake: number; outcome: number }
+/** カテゴリー別・年齢区分内訳（積み上げグラフ用） */
+export interface CategoryAgeBreakdown {
+  code: string; name: string;
+  u5m: number;      // 〜5ヶ月齢
+  m5_10y: number;   // 5ヶ月〜10歳
+  o10y: number;     // 10歳〜
+  total: number;
+}
+
+const ageKey = (code: string): 'u5m' | 'm5_10y' | 'o10y' =>
+  code === 'UNDER_5M' ? 'u5m' : code === 'M5_TO_Y10' ? 'm5_10y' : 'o10y';
 
 export interface Summary {
   reportCount: number;
@@ -19,6 +30,8 @@ export interface Summary {
   liveReleaseRate: number | null; // %
   intakeByCategory: CategoryCount[];
   outcomeByCategory: CategoryCount[];
+  intakeByCategoryAge: CategoryAgeBreakdown[];
+  outcomeByCategoryAge: CategoryAgeBreakdown[];
   trend: TrendPoint[];
   transferIn: number;
   transferOut: number;
@@ -36,6 +49,8 @@ export function reportOutcomeTotal(r: MonthlyReport): number {
 export function summarize(reports: MonthlyReport[]): Summary {
   const intakeMap = new Map<string, number>();
   const outcomeMap = new Map<string, number>();
+  const intakeAge = new Map<string, { u5m: number; m5_10y: number; o10y: number }>();
+  const outcomeAge = new Map<string, { u5m: number; m5_10y: number; o10y: number }>();
   const trendMap = new Map<string, TrendPoint>();
   const orgs = new Set<string>();
   let liveOutcomeTotal = 0;
@@ -49,9 +64,15 @@ export function summarize(reports: MonthlyReport[]): Summary {
 
     for (const e of r.intakeEntries) {
       intakeMap.set(e.intakeCategoryCode, (intakeMap.get(e.intakeCategoryCode) ?? 0) + e.count);
+      const a = intakeAge.get(e.intakeCategoryCode) ?? { u5m: 0, m5_10y: 0, o10y: 0 };
+      a[ageKey(e.ageGroupCode)] += e.count;
+      intakeAge.set(e.intakeCategoryCode, a);
     }
     for (const e of r.outcomeEntries) {
       outcomeMap.set(e.outcomeCategoryCode, (outcomeMap.get(e.outcomeCategoryCode) ?? 0) + e.count);
+      const oa = outcomeAge.get(e.outcomeCategoryCode) ?? { u5m: 0, m5_10y: 0, o10y: 0 };
+      oa[ageKey(e.ageGroupCode)] += e.count;
+      outcomeAge.set(e.outcomeCategoryCode, oa);
       const cat = outcomeCategory(e.outcomeCategoryCode);
       if (cat?.isLiveOutcome) liveOutcomeTotal += e.count;
       else nonLiveOutcomeTotal += e.count;
@@ -71,6 +92,14 @@ export function summarize(reports: MonthlyReport[]): Summary {
     .map((c) => ({ code: c.code, name: c.name, count: outcomeMap.get(c.code) ?? 0 }))
     .filter((c) => c.count > 0);
 
+  const buildAge = (cats: { code: string; name: string }[], ageMap: Map<string, { u5m: number; m5_10y: number; o10y: number }>): CategoryAgeBreakdown[] =>
+    cats.map((c) => {
+      const a = ageMap.get(c.code) ?? { u5m: 0, m5_10y: 0, o10y: 0 };
+      return { code: c.code, name: c.name, u5m: a.u5m, m5_10y: a.m5_10y, o10y: a.o10y, total: a.u5m + a.m5_10y + a.o10y };
+    }).filter((x) => x.total > 0);
+  const intakeByCategoryAge = buildAge(INTAKE_CATEGORIES, intakeAge);
+  const outcomeByCategoryAge = buildAge(OUTCOME_CATEGORIES, outcomeAge);
+
   const intakeTotal = [...intakeMap.values()].reduce((a, b) => a + b, 0);
   const outcomeTotal = liveOutcomeTotal + nonLiveOutcomeTotal;
   const trend = [...trendMap.values()].sort((a, b) => a.key.localeCompare(b.key));
@@ -85,6 +114,8 @@ export function summarize(reports: MonthlyReport[]): Summary {
     liveReleaseRate: liveReleaseRate(liveOutcomeTotal, outcomeTotal),
     intakeByCategory,
     outcomeByCategory,
+    intakeByCategoryAge,
+    outcomeByCategoryAge,
     trend,
     transferIn: intakeMap.get('TRANSFER_IN') ?? 0,
     transferOut: outcomeMap.get('TRANSFER_OUT') ?? 0,
