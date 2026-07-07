@@ -181,6 +181,25 @@ export interface PeriodSummary {
   liveReleaseRate: number | null;
 }
 
+/** レポート考察メモの保存キー（フィルタ文脈ごと） */
+export function noteKey(type: PeriodType, filter: { year?: number; species?: string; regionBlock?: string }): string {
+  return `${type}:${filter.year ?? 'all'}:${filter.species ?? 'all'}:${filter.regionBlock ?? 'all'}`;
+}
+
+/** 数字から見える考察の自動下書き（管理者が加筆修正する前提の叩き台） */
+export function generateInsights(summary: Summary, managed: ManagedCount): string {
+  if (summary.reportCount === 0) return 'この条件に該当するデータがまだありません。';
+  const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
+  const topIntake = [...summary.intakeByCategory].sort((a, b) => b.count - a.count)[0];
+  const ageU5 = summary.intakeByCategoryAge.reduce((s, c) => s + c.u5m, 0);
+  const lines: string[] = [];
+  lines.push(`対象では ${summary.organizationCount} 団体がデータを提出し、現在これらの団体で合計 ${managed.total} 頭（犬 ${managed.dog}・猫 ${managed.cat}）を保護管理しています（うち一時預かり ${managed.foster} 頭）。`);
+  lines.push(`新規収容は ${summary.intakeTotal} 頭。${topIntake ? `最も多い収容ルートは「${topIntake.name}」（${topIntake.count} 頭）で、` : ''}〜5ヶ月齢が新規収容の ${pct(ageU5, summary.intakeTotal)}% を占めました。`);
+  lines.push(`転帰は ${summary.outcomeTotal} 頭で、生存転帰率は ${summary.liveReleaseRate ?? '—'}%（生存 ${summary.liveOutcomeTotal}・非生存 ${summary.nonLiveOutcomeTotal}）でした。`);
+  lines.push(`団体間連携による移動は 受入 ${summary.transferIn} 頭・引渡 ${summary.transferOut} 頭でした。`);
+  return lines.join('\n');
+}
+
 export function summarizeByPeriod(reports: MonthlyReport[], type: PeriodType): PeriodSummary[] {
   const map = new Map<string, {
     key: string; label: string; orgs: Set<string>;

@@ -255,3 +255,15 @@ export async function deleteReport(id: string): Promise<boolean> {
   await prisma.monthlyReport.update({ where: { id }, data: { isActive: false } });
   return true;
 }
+
+export async function getReportNote(key: string): Promise<string | null> {
+  const n = await prisma.reportNote.findUnique({ where: { key } });
+  return n?.body ?? null;
+}
+export async function saveReportNote(key: string, body: string, updatedBy?: string): Promise<void> {
+  await prisma.reportNote.upsert({
+    where: { key },
+    update: { body, updatedBy: updatedBy ?? null },
+    create: { key, body, updatedBy: updatedBy ?? null },
+  });
+}

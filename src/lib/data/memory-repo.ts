@@ -35,3 +35,10 @@ export async function setReportStatus(id: string, status: ReportStatus): Promise
 export async function deleteReport(id: string): Promise<boolean> {
   return store._deleteReport(id);
 }
+
+export async function getReportNote(key: string): Promise<string | null> {
+  return store._getReportNote(key);
+}
+export async function saveReportNote(key: string, body: string, _updatedBy?: string): Promise<void> {
+  store._saveReportNote(key, body);
+}

@@ -200,6 +200,15 @@ model Prefecture {
   organizations Organization[]
 }
 
+// ========== レポート考察メモ（管理者が加筆修正） ==========
+model ReportNote {
+  key       String   @id // レポートの文脈キー（例: "quarter:2026:all:all"）
+  body      String
+  updatedBy String?
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
 // ========== 監査ログ ==========
 model AuditLog {
   id        String   @id @default(cuid())

@@ -46,3 +46,10 @@ export function setReportStatus(id: string, status: ReportStatus): Promise<Month
 export function deleteReport(id: string): Promise<boolean> {
   return impl().deleteReport(id);
 }
+
+export function getReportNote(key: string): Promise<string | null> {
+  return impl().getReportNote(key);
+}
+export function saveReportNote(key: string, body: string, updatedBy?: string): Promise<void> {
+  return impl().saveReportNote(key, body, updatedBy);
+}

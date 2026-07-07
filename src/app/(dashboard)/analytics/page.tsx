@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { listReports, type ReportFilter } from '@/lib/data/repo';
-import { summarize, summarizeByPeriod, currentManagedCount, type PeriodType } from '@/lib/data/analytics';
+import { listReports, getReportNote, type ReportFilter } from '@/lib/data/repo';
+import { summarize, summarizeByPeriod, currentManagedCount, generateInsights, noteKey, type PeriodType } from '@/lib/data/analytics';
 import { getSession, isAdmin } from '@/lib/auth/session';
 import { Card, CardBody, StatCard, buttonClass, SectionTitle, Badge } from '@/components/ui';
+import { CommentarySection } from './CommentarySection';
 import { REGION_BLOCKS } from '@/lib/masters';
 import { formatNumber } from '@/lib/format';
 import type { Species } from '@/lib/types';
@@ -28,6 +29,9 @@ export default async function AnalyticsPage({
   const summary = summarize(reports);
   const periods = summarizeByPeriod(reports, period);
   const managed = currentManagedCount(reports);
+  const nk = noteKey(period, filter);
+  const savedNote = await getReportNote(nk);
+  const draft = generateInsights(summary, managed);
   // 推移グラフは常に「月次」で表示（期間切替は表・エクスポート用）
   const monthlyTrend = summarizeByPeriod(reports, 'month').map((p) => ({ key: p.key, label: p.label, intake: p.intakeTotal, outcome: p.outcomeTotal }));
 
@@ -152,6 +156,9 @@ export default async function AnalyticsPage({
           </CardBody>
         </Card>
       </div>
+
+      {/* 考察・コメント */}
+      <CommentarySection noteKey={nk} savedBody={savedNote} draft={draft} canEdit={isAdmin(session)} />
 
       {/* 推移・構成 */}
       <div className="mt-6">

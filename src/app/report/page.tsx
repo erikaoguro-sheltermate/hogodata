@@ -1,5 +1,5 @@
-import { listReports, type ReportFilter } from '@/lib/data/repo';
-import { summarize, summarizeByPeriod, currentManagedCount, type PeriodType } from '@/lib/data/analytics';
+import { listReports, getReportNote, type ReportFilter } from '@/lib/data/repo';
+import { summarize, summarizeByPeriod, currentManagedCount, generateInsights, noteKey, type PeriodType } from '@/lib/data/analytics';
 import { SPECIES_LABEL, REGION_BLOCKS } from '@/lib/masters';
 import { formatNumber } from '@/lib/format';
 import type { Species } from '@/lib/types';
@@ -23,6 +23,8 @@ export default async function ReportPage({
   const summary = summarize(reports);
   const periods = summarizeByPeriod(reports, period);
   const managed = currentManagedCount(reports);
+  const savedNote = await getReportNote(noteKey(period, filter));
+  const commentary = savedNote ?? generateInsights(summary, managed);
 
   const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'long', day: 'numeric' });
   const filterLabel = [
@@ -83,6 +85,14 @@ export default async function ReportPage({
               <div className="mt-1 text-xl font-bold tabular-nums text-slate-800">{val}<span className="ml-0.5 text-xs font-medium text-slate-400">{unit}</span></div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* 考察 */}
+      <section className="mb-6">
+        <h2 className="mb-2 text-base font-bold text-slate-700">数字から見えること（考察）</h2>
+        <div className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-700">
+          {commentary || '—'}
         </div>
       </section>
 

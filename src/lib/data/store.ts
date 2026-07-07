@@ -14,6 +14,7 @@ import { checkBalance } from '../validation/balance';
 interface DB {
   organizations: Organization[];
   reports: MonthlyReport[];
+  notes: Record<string, string>;
 }
 
 // HMR をまたいで状態を保持する（dev で seed が毎回走らないように）
@@ -150,7 +151,14 @@ function seed(): DB {
       status: 'DRAFT', submittedAt: null },
   ];
 
-  return { organizations, reports };
+  return { organizations, reports, notes: {} };
+}
+
+export function _getReportNote(key: string): string | null {
+  return db().notes[key] ?? null;
+}
+export function _saveReportNote(key: string, body: string): void {
+  db().notes[key] = body;
 }
 
 function db(): DB {
