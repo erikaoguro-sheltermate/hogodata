@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getOrganization, listReports } from '@/lib/data/repo';
+import { summarize, summarizeByPeriod } from '@/lib/data/analytics';
 import { Card, CardBody, Badge, StatCard, buttonClass, SectionTitle } from '@/components/ui';
 import { prefectureByCode, STATUS_LABEL, ANIMAL_KIND_LABEL } from '@/lib/masters';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatNumber } from '@/lib/format';
 import type { MonthlyReport, Species, ReportStatus } from '@/lib/types';
 
 // パイロット年度（2026年4月〜2027年3月）の対象月
@@ -56,6 +57,10 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
   const latestSubmitted = reports
     .filter((r) => r.submittedAt)
     .sort((a, b) => (b.submittedAt ?? '').localeCompare(a.submittedAt ?? ''))[0];
+
+  // この団体の活動統計
+  const orgSummary = summarize(reports);
+  const monthly = summarizeByPeriod(reports, 'month');
 
   return (
     <div>
@@ -118,6 +123,49 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
             </div>
           </CardBody>
         </Card>
+      </div>
+
+      {/* この団体の活動統計 */}
+      <div className="mt-8">
+        <SectionTitle subtitle="この団体のこれまでの月次データ">活動統計</SectionTitle>
+        {reports.length === 0 ? (
+          <Card><CardBody><p className="text-sm text-slate-400">まだレポートがありません。</p></CardBody></Card>
+        ) : (
+          <>
+            <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+              <StatCard label="新規収容（累計）" value={formatNumber(orgSummary.intakeTotal)} accent="sky" />
+              <StatCard label="転帰（累計）" value={formatNumber(orgSummary.outcomeTotal)} sub={`生存 ${formatNumber(orgSummary.liveOutcomeTotal)} / 非生存 ${formatNumber(orgSummary.nonLiveOutcomeTotal)}`} />
+              <StatCard label="生存転帰率" value={orgSummary.liveReleaseRate === null ? '—' : `${orgSummary.liveReleaseRate}%`} accent="emerald" />
+              <StatCard label="団体間連携" value={`IN ${formatNumber(orgSummary.transferIn)}`} sub={`OUT ${formatNumber(orgSummary.transferOut)}`} />
+            </div>
+            <Card>
+              <CardBody className="p-0 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+                      <th className="px-4 py-3 font-medium">月</th>
+                      <th className="px-4 py-3 text-right font-medium">犬/猫</th>
+                      <th className="px-4 py-3 text-right font-medium">新規収容</th>
+                      <th className="px-4 py-3 text-right font-medium">転帰</th>
+                      <th className="px-4 py-3 text-right font-medium">生存転帰率</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthly.map((m) => (
+                      <tr key={m.key} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                        <td className="px-4 py-3 font-medium text-slate-700">{m.label}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-600">{m.dogReports} / {m.catReports}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-700">{formatNumber(m.intakeTotal)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-700">{formatNumber(m.outcomeTotal)}</td>
+                        <td className="px-4 py-3 text-right tabular-nums font-medium text-emerald-700">{m.liveReleaseRate === null ? '—' : `${m.liveReleaseRate}%`}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardBody>
+            </Card>
+          </>
+        )}
       </div>
 
       <div className="mt-8">

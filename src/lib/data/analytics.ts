@@ -92,3 +92,77 @@ export function summarize(reports: MonthlyReport[]): Summary {
     catReports,
   };
 }
+
+// ============================================================
+// 期間別集計（月次 / 四半期 / 年次）
+// 年度ベース：4月始まり（4-6月=Q1 / 7-9=Q2 / 10-12=Q3 / 1-3=Q4）
+// ============================================================
+export type PeriodType = 'month' | 'quarter' | 'year';
+
+export function fiscalYear(year: number, month: number): number {
+  return month >= 4 ? year : year - 1;
+}
+export function fiscalQuarter(month: number): number {
+  return Math.floor(((month - 4 + 12) % 12) / 3) + 1;
+}
+const QUARTER_RANGE: Record<number, string> = { 1: '4-6月', 2: '7-9月', 3: '10-12月', 4: '1-3月' };
+
+export function periodBucket(year: number, month: number, type: PeriodType): { key: string; label: string } {
+  if (type === 'month') {
+    return { key: `${year}-${String(month).padStart(2, '0')}`, label: ymLabel(year, month) };
+  }
+  const fy = fiscalYear(year, month);
+  if (type === 'year') return { key: `FY${fy}`, label: `${fy}年度` };
+  const q = fiscalQuarter(month);
+  return { key: `FY${fy}-Q${q}`, label: `${fy}年度 Q${q}（${QUARTER_RANGE[q]}）` };
+}
+
+export interface PeriodSummary {
+  key: string;
+  label: string;
+  orgCount: number;            // 提出した団体数（ユニーク）
+  dogReports: number;
+  catReports: number;
+  intakeTotal: number;
+  outcomeTotal: number;
+  liveOutcomeTotal: number;
+  nonLiveOutcomeTotal: number;
+  liveReleaseRate: number | null;
+}
+
+export function summarizeByPeriod(reports: MonthlyReport[], type: PeriodType): PeriodSummary[] {
+  const map = new Map<string, {
+    key: string; label: string; orgs: Set<string>;
+    dogReports: number; catReports: number; intakeTotal: number;
+    liveOutcomeTotal: number; nonLiveOutcomeTotal: number;
+  }>();
+
+  for (const r of reports) {
+    const { key, label } = periodBucket(r.year, r.month, type);
+    const b = map.get(key) ?? { key, label, orgs: new Set<string>(), dogReports: 0, catReports: 0, intakeTotal: 0, liveOutcomeTotal: 0, nonLiveOutcomeTotal: 0 };
+    b.orgs.add(r.organizationId);
+    if (r.species === 'DOG') b.dogReports++; else b.catReports++;
+    b.intakeTotal += reportIntakeTotal(r);
+    for (const e of r.outcomeEntries) {
+      const cat = outcomeCategory(e.outcomeCategoryCode);
+      if (cat?.isLiveOutcome) b.liveOutcomeTotal += e.count;
+      else b.nonLiveOutcomeTotal += e.count;
+    }
+    map.set(key, b);
+  }
+
+  return [...map.values()]
+    .map((b) => ({
+      key: b.key,
+      label: b.label,
+      orgCount: b.orgs.size,
+      dogReports: b.dogReports,
+      catReports: b.catReports,
+      intakeTotal: b.intakeTotal,
+      outcomeTotal: b.liveOutcomeTotal + b.nonLiveOutcomeTotal,
+      liveOutcomeTotal: b.liveOutcomeTotal,
+      nonLiveOutcomeTotal: b.nonLiveOutcomeTotal,
+      liveReleaseRate: liveReleaseRate(b.liveOutcomeTotal, b.liveOutcomeTotal + b.nonLiveOutcomeTotal),
+    }))
+    .sort((a, b) => a.key.localeCompare(b.key));
+}
