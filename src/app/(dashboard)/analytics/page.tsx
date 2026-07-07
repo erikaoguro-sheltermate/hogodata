@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { listReports, listOrganizations, type ReportFilter } from '@/lib/data/repo';
+import { listReports, type ReportFilter } from '@/lib/data/repo';
 import { summarize, summarizeByPeriod, type PeriodType } from '@/lib/data/analytics';
 import { getSession, isAdmin } from '@/lib/auth/session';
 import { Card, CardBody, StatCard, buttonClass, SectionTitle, Badge } from '@/components/ui';
@@ -25,10 +25,9 @@ export default async function AnalyticsPage({
     species: (sp.species as Species) || undefined,
     regionBlock: sp.block || undefined,
   };
-  const [reports, orgs] = await Promise.all([listReports(filter), listOrganizations()]);
+  const reports = await listReports(filter);
   const summary = summarize(reports);
   const periods = summarizeByPeriod(reports, period);
-  const registeredCount = orgs.filter((o) => o.isActive).length;
   const trend = periods.map((p) => ({ key: p.key, label: p.label, intake: p.intakeTotal, outcome: p.outcomeTotal }));
 
   // 現在のフィルタを維持したエクスポートURL
@@ -90,7 +89,7 @@ export default async function AnalyticsPage({
 
       {/* サマリー */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="提出した団体数" value={`${summary.organizationCount} / ${registeredCount}`} accent="emerald" sub="提出団体 / 登録団体" />
+        <StatCard label="データを提出した団体数" value={summary.organizationCount} accent="emerald" sub="この集計に含まれる団体" />
         <StatCard label="新規収容（合計）" value={formatNumber(summary.intakeTotal)} accent="sky" sub={`${summary.reportCount} レポート`} />
         <StatCard label="転帰（合計）" value={formatNumber(summary.outcomeTotal)} sub={`生存 ${formatNumber(summary.liveOutcomeTotal)} / 非生存 ${formatNumber(summary.nonLiveOutcomeTotal)}`} />
         <StatCard label="生存転帰率" value={summary.liveReleaseRate === null ? '—' : `${summary.liveReleaseRate}%`} accent="emerald" sub="生存転帰 / 全転帰" />
