@@ -52,7 +52,7 @@ export default async function ReportPage({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-2xl">🐾</span>
-              <span className="text-lg font-bold">JASA Data Hub</span>
+              <span className="text-lg font-bold">どうぶつ保護データプロジェクト</span>
             </div>
             <h1 className="mt-1 text-2xl font-bold">どうぶつ保護データ 活動統計レポート</h1>
           </div>

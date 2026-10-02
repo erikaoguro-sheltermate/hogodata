@@ -34,9 +34,8 @@ export function Sidebar({ role, displayName, mode }: { role: Role; displayName: 
     <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
       <div className="flex items-center gap-2 px-5 py-5">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-lg">🐾</div>
-        <div>
-          <div className="text-sm font-bold leading-tight text-slate-800">JASA Data Hub</div>
-          <div className="text-[11px] text-slate-400">どうぶつ保護データ</div>
+        <div className="text-[15px] font-bold leading-snug text-slate-800">
+          どうぶつ保護<br />データプロジェクト
         </div>
       </div>
 

@@ -9,7 +9,7 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "JASA Data Hub — どうぶつ保護データ",
+  title: "どうぶつ保護データプロジェクト",
   description: "民間動物保護団体の月次データ（収容・転帰・管理頭数・TNR）を統一フォーマットで集計・可視化する基盤",
 };
 

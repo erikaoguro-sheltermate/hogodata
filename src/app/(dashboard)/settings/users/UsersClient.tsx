@@ -22,7 +22,7 @@ interface Props {
 /** 初期パスワードは一度だけ表示する（保存しない） */
 function PasswordNotice({ email, password, onClose }: { email: string; password: string; onClose: () => void }) {
   const [copied, setCopied] = React.useState(false);
-  const text = `JASA Data Hub ログイン情報\nURL: ${window.location.origin}/login\nメールアドレス: ${email}\n初期パスワード: ${password}\n※ログイン後「アカウント」からパスワードを変更してください。`;
+  const text = `どうぶつ保護データプロジェクト ログイン情報\nURL: ${window.location.origin}/login\nメールアドレス: ${email}\n初期パスワード: ${password}\n※ログイン後「アカウント」からパスワードを変更してください。`;
   async function copy() {
     await navigator.clipboard.writeText(text);
     setCopied(true);
