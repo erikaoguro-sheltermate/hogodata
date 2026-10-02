@@ -1,6 +1,9 @@
 // 団体ユーザーのホーム：先月分の入力状況と、今年度の提出状況・自団体の数字
 import Link from 'next/link';
-import { getOrganization, listReports } from '@/lib/data/repo';
+import { getOrganization, listReports, getSettings, listAnnouncements, readAnnouncementIds } from '@/lib/data/repo';
+import { deadlineFor, formatDeadline } from '@/lib/deadline';
+import { expectedSpecies } from '@/lib/submissions';
+import { formatDate } from '@/lib/format';
 import {
   summarize, currentManagedCount, fiscalYear, fiscalMonths, inFiscalPeriod, previousYearMonth, isAfter,
 } from '@/lib/data/analytics';
@@ -37,12 +40,16 @@ function DueCard({ species, report, year, month }: { species: Species; report?: 
 
 export async function OrgHome({ session }: { session: Session }) {
   const orgId = session.organizationId!;
-  const [org, reports] = await Promise.all([getOrganization(orgId), listReports({ organizationId: orgId })]);
+  const [org, reports, settings, announcements, readIds] = await Promise.all([
+    getOrganization(orgId), listReports({ organizationId: orgId }), getSettings(), listAnnouncements(), readAnnouncementIds(session.userId),
+  ]);
+  const seen = new Set(readIds);
+  const latestNews = announcements.slice(0, 3);
 
   const due = previousYearMonth();
   const fy = fiscalYear(due.year, due.month);
-  const kinds = (org?.animalTypes ?? []).filter((k): k is Species => k === 'DOG' || k === 'CAT');
-  const species: Species[] = kinds.length > 0 ? kinds : ['DOG', 'CAT'];
+  const species: Species[] = expectedSpecies(org ?? {});
+  const dl = deadlineFor(due.year, due.month, settings.deadlineDay);
 
   const find = (s: Species, y: number, m: number) => reports.find((r) => r.species === s && r.year === y && r.month === m);
   const fyReports = reports.filter((r) => inFiscalPeriod(r, fy));
@@ -57,7 +64,7 @@ export async function OrgHome({ session }: { session: Session }) {
           <h1 className="text-2xl font-bold text-slate-800">{org?.name ?? '所属団体'}</h1>
           <p className="mt-1 text-sm text-slate-500">{session.displayName} さん、いつもご協力ありがとうございます。</p>
         </div>
-        <Link href={`/org-report/${orgId}?fy=${fy}`} className={buttonClass('secondary')}>📄 自団体のレポートを見る</Link>
+        <Link href={`/org-report/${orgId}?fy=${fy}`} className={buttonClass('secondary')}>📄 年度のまとめを見る</Link>
       </div>
 
       {/* 先月分 */}
@@ -65,15 +72,44 @@ export async function OrgHome({ session }: { session: Session }) {
         <CardBody>
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg font-bold text-slate-800">{ymLabel(due.year, due.month)}分の報告</h2>
-            <span className="text-sm text-slate-500">
-              {allDone ? '提出ありがとうございました 🎉' : '月末時点の数字を入力して「提出」してください'}
-            </span>
+            {allDone ? (
+              <span className="text-sm text-emerald-700">提出ありがとうございました 🎉</span>
+            ) : (
+              <span className={dl.state === 'overdue' ? 'rounded-full bg-red-50 px-3 py-1 text-sm font-medium text-red-700'
+                : dl.state === 'soon' ? 'rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-800' : 'text-sm text-slate-500'}>
+                提出期限 {formatDeadline(dl.date)}
+                {dl.state === 'overdue' ? '（過ぎています）' : dl.daysLeft === 0 ? '（今日まで）' : `（あと ${dl.daysLeft} 日）`}
+              </span>
+            )}
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {species.map((s) => <DueCard key={s} species={s} report={find(s, due.year, due.month)} year={due.year} month={due.month} />)}
           </div>
         </CardBody>
       </Card>
+
+      {latestNews.length > 0 && (
+        <Card className="mb-6">
+          <CardBody>
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-800">お知らせ</h2>
+              <Link href="/announcements" className="text-sm font-medium text-emerald-700 hover:underline">すべて見る</Link>
+            </div>
+            <ul className="divide-y divide-slate-100">
+              {latestNews.map((a) => (
+                <li key={a.id} className="py-2">
+                  <Link href="/announcements" className="flex flex-wrap items-center gap-2 text-sm hover:text-emerald-700">
+                    <span className="text-xs text-slate-400">{formatDate(a.publishedAt)}</span>
+                    {a.pinned && <Badge color="amber">重要</Badge>}
+                    {!seen.has(a.id) && <Badge color="red">NEW</Badge>}
+                    <span className="font-medium text-slate-700">{a.title}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </CardBody>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="現在の管理頭数" value={formatNumber(managed.total)} accent="emerald" sub={`うち一時預かり ${formatNumber(managed.foster)}`} />

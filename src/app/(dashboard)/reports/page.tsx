@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { listOrganizations, listReports, type ReportFilter } from '@/lib/data/repo';
 import { checkBalance } from '@/lib/validation/balance';
 import { requireRole } from '@/lib/auth/session';
+import { ReportTabs } from './ReportTabs';
 import { scopeReportFilter } from '@/lib/auth/policy';
 import { Card, CardBody, Badge, buttonClass } from '@/components/ui';
 import { SPECIES_LABEL, STATUS_LABEL } from '@/lib/masters';
@@ -31,9 +32,17 @@ export default async function ReportsPage({
 
   return (
     <div>
+      {isOrgUser && (
+        <>
+          <h1 className="mb-4 text-2xl font-bold text-slate-800">レポート</h1>
+          <ReportTabs current="monthly" orgId={session.organizationId!} />
+        </>
+      )}
       <div className="mb-6 flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">月次レポート</h1>
+          <h2 className={isOrgUser ? 'text-lg font-bold text-slate-800' : 'text-2xl font-bold text-slate-800'}>
+            {isOrgUser ? '毎月の報告' : '月次レポート'}
+          </h2>
           <p className="mt-1 text-sm text-slate-500">
             {isOrgUser && orgs[0] ? `${orgs[0].name} ・ ` : ''}{reports.length} 件
           </p>

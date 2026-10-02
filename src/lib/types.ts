@@ -143,3 +143,23 @@ export interface AuditEntry {
   summary: string | null;
   createdAt: string;
 }
+
+// ---- お知らせ ----
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  pinned: boolean;
+  publishedAt: string;
+  updatedAt: string;
+}
+
+// ---- ポータル設定 ----
+export interface PortalSettings {
+  /** 翌月の何日までに提出するか（1〜28） */
+  deadlineDay: number;
+  /** 問い合わせ先メール（ヘルプ・ログイン画面に表示） */
+  contactEmail: string;
+  /** 問い合わせ先の補足（受付時間・担当など） */
+  contactNote: string;
+}

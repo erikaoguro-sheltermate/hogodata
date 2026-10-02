@@ -1,5 +1,6 @@
 import { Card, CardBody, Button } from '@/components/ui';
 import { authMode, getSession } from '@/lib/auth/session';
+import { getSettings } from '@/lib/data/repo';
 import { DemoRoleButtons } from './DemoRoleButtons';
 import { gateLogin, passwordLogin, logout } from './actions';
 
@@ -17,6 +18,7 @@ export default async function LoginPage({
 }) {
   const sp = await searchParams;
   const mode = authMode();
+  const { contactEmail } = await getSettings();
   // ログイン済みだが使えない状態（Profile 未登録・停止中）
   const blocked = mode === 'supabase' && sp.error === 'noaccess' && (await getSession()).userId !== 'anonymous';
 
@@ -53,6 +55,7 @@ export default async function LoginPage({
                   <Button type="submit" className="w-full">ログイン</Button>
                   <p className="pt-1 text-center text-xs text-slate-400">
                     パスワードを忘れた場合は、JASA事務局に再発行を依頼してください。
+                    {contactEmail && <><br /><a href={`mailto:${contactEmail}`} className="text-emerald-700 hover:underline">{contactEmail}</a></>}
                   </p>
                 </form>
               )

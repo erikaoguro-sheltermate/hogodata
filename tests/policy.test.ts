@@ -86,3 +86,40 @@ describe('年度ヘルパー', () => {
     expect(previousYearMonth(new Date(2026, 9, 2))).toEqual({ year: 2026, month: 9 });
   });
 });
+
+import { deadlineFor } from '@/lib/deadline';
+import { expectedSpecies, orgMonthStatus } from '@/lib/submissions';
+import type { MonthlyReport } from '@/lib/types';
+
+describe('提出期限', () => {
+  it('対象月の翌月 N 日が期限', () => {
+    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 3)).date).toBe('2026-10-10');
+    expect(deadlineFor(2026, 12, 10, new Date(2027, 0, 1)).date).toBe('2027-01-10');
+  });
+  it('残り日数と状態', () => {
+    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 3))).toMatchObject({ daysLeft: 7, state: 'open' });
+    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 8))).toMatchObject({ daysLeft: 2, state: 'soon' });
+    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 10))).toMatchObject({ daysLeft: 0, state: 'soon' });
+    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 11))).toMatchObject({ daysLeft: -1, state: 'overdue' });
+  });
+});
+
+describe('提出状況', () => {
+  const rep = (species: 'DOG' | 'CAT', status: MonthlyReport['status']) =>
+    ({ organizationId: 'o', species, year: 2026, month: 9, status } as MonthlyReport);
+
+  it('保護動物種が未設定なら犬・猫とも対象', () => {
+    expect(expectedSpecies({ animalTypes: [] })).toEqual(['DOG', 'CAT']);
+    expect(expectedSpecies({ animalTypes: ['CAT', 'OTHER'] })).toEqual(['CAT']);
+  });
+  it('全種別が提出済みなら done、下書きや片方だけなら partial', () => {
+    const org = { id: 'o', animalTypes: ['DOG', 'CAT'] as ('DOG' | 'CAT')[] };
+    expect(orgMonthStatus(org, [rep('DOG', 'SUBMITTED'), rep('CAT', 'CONFIRMED')], 2026, 9).state).toBe('done');
+    expect(orgMonthStatus(org, [rep('DOG', 'SUBMITTED')], 2026, 9).state).toBe('partial');
+    expect(orgMonthStatus(org, [rep('DOG', 'DRAFT'), rep('CAT', 'DRAFT')], 2026, 9).state).toBe('partial');
+    expect(orgMonthStatus(org, [], 2026, 9).state).toBe('none');
+  });
+  it('猫だけの団体は猫が出ていれば done', () => {
+    expect(orgMonthStatus({ id: 'o', animalTypes: ['CAT'] }, [rep('CAT', 'SUBMITTED')], 2026, 9).state).toBe('done');
+  });
+});

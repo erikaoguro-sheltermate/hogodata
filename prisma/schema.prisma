@@ -222,3 +222,34 @@ model AuditLog {
 
   @@index([entity, entityId])
 }
+
+// ========== お知らせ（事務局 → 団体） ==========
+model Announcement {
+  id          String             @id @default(cuid())
+  title       String
+  body        String
+  pinned      Boolean            @default(false) // 重要（ホームの上に固定）
+  publishedAt DateTime           @default(now())
+  createdById String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  reads       AnnouncementRead[]
+
+  @@index([publishedAt])
+}
+
+model AnnouncementRead {
+  userId         String // Profile.id
+  announcementId String
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  readAt         DateTime     @default(now())
+
+  @@id([userId, announcementId])
+}
+
+// ========== ポータル設定（提出期限・問い合わせ先など） ==========
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

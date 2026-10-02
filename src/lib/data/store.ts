@@ -6,8 +6,9 @@
 
 import type {
   Organization, MonthlyReport, ReportInput, ReportStatus,
-  Species, IntakeEntryInput, OutcomeEntryInput, UserProfile, AuditEntry,
+  Species, IntakeEntryInput, OutcomeEntryInput, UserProfile, AuditEntry, Announcement, PortalSettings,
 } from '../types';
+import { DEFAULT_SETTINGS } from '../deadline';
 import { PREFECTURES, INTAKE_CATEGORIES, OUTCOME_CATEGORIES } from '../masters';
 import { checkBalance } from '../validation/balance';
 
@@ -17,6 +18,9 @@ interface DB {
   notes: Record<string, string>;
   profiles: UserProfile[];
   audit: AuditEntry[];
+  announcements: Announcement[];
+  reads: Record<string, string[]>; // userId → 既読のお知らせ id
+  settings: PortalSettings;
 }
 
 // HMR をまたいで状態を保持する（dev で seed が毎回走らないように）
@@ -160,7 +164,18 @@ function seed(): DB {
     { id: 'demo-viewer', email: 'viewer@example.org', displayName: '閲覧者（デモ）', role: 'VIEWER', organizationId: null, createdAt: nowIso() },
   ];
 
-  return { organizations, reports, notes: {}, profiles, audit: [] };
+  const announcements: Announcement[] = [
+    {
+      id: 'ann_1', pinned: true, publishedAt: nowIso(), updatedAt: nowIso(),
+      title: '月次データの提出をオンラインで受け付けています',
+      body: '毎月の報告は、ホームの「入力する」から提出できます。\n前月の月末の頭数は自動で入ります。わからない点は「ヘルプ」をご覧ください。',
+    },
+  ];
+
+  return {
+    organizations, reports, notes: {}, profiles, audit: [],
+    announcements, reads: {}, settings: { ...DEFAULT_SETTINGS, contactEmail: 'data@example.org', contactNote: '平日 10:00〜17:00' },
+  };
 }
 
 export function _getReportNote(key: string): string | null {
@@ -175,7 +190,43 @@ function db(): DB {
   // HMR で古い形の DB が残っている場合の補完
   g.__jasaDB.profiles ??= seed().profiles;
   g.__jasaDB.audit ??= [];
+  g.__jasaDB.announcements ??= seed().announcements;
+  g.__jasaDB.reads ??= {};
+  g.__jasaDB.settings ??= seed().settings;
   return g.__jasaDB;
+}
+
+// ============================================================
+// Announcements / Settings
+// ============================================================
+export function _listAnnouncements(): Announcement[] {
+  return db().announcements.slice().sort((a, b) =>
+    Number(b.pinned) - Number(a.pinned) || b.publishedAt.localeCompare(a.publishedAt));
+}
+export function _saveAnnouncement(a: Pick<Announcement, 'title' | 'body' | 'pinned'>, id?: string): Announcement {
+  const existing = id ? db().announcements.find((x) => x.id === id) : undefined;
+  if (existing) {
+    Object.assign(existing, a, { updatedAt: nowIso() });
+    return existing;
+  }
+  const created = { ...a, id: `ann_${crypto.randomUUID().slice(0, 8)}`, publishedAt: nowIso(), updatedAt: nowIso() };
+  db().announcements.push(created);
+  return created;
+}
+export function _deleteAnnouncement(id: string): void {
+  db().announcements = db().announcements.filter((a) => a.id !== id);
+}
+export function _readAnnouncementIds(userId: string): string[] {
+  return db().reads[userId] ?? [];
+}
+export function _markAnnouncementsRead(userId: string, ids: string[]): void {
+  db().reads[userId] = [...new Set([...(db().reads[userId] ?? []), ...ids])];
+}
+export function _getSettings(): PortalSettings {
+  return { ...db().settings };
+}
+export function _saveSettings(s: PortalSettings): void {
+  db().settings = { ...s };
 }
 
 // ============================================================

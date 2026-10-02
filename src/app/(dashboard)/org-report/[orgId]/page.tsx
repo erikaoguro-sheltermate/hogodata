@@ -14,6 +14,7 @@ import { SPECIES_LABEL, prefectureByCode } from '@/lib/masters';
 import { formatNumber, ymLabel } from '@/lib/format';
 import type { Species } from '@/lib/types';
 import { PrintBar } from '../../../report/PrintButton';
+import { ReportTabs } from '../../reports/ReportTabs';
 import { BreakdownTable } from '../../../report/BreakdownTable';
 import { TrendChart } from '../../analytics/AnalyticsCharts';
 
@@ -72,6 +73,13 @@ export default async function OrgReportPage({
     active ? 'rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-white' : 'rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 hover:bg-slate-200';
 
   return (
+    <>
+    {session.role === 'ORG_USER' && (
+      <div className="no-print">
+        <h1 className="mb-4 text-2xl font-bold text-slate-800">レポート</h1>
+        <ReportTabs current="summary" orgId={orgId} />
+      </div>
+    )}
     <div className="mx-auto max-w-4xl rounded-2xl bg-white px-8 py-8 text-slate-800 shadow-sm print:rounded-none print:px-0 print:py-0 print:shadow-none">
       <style>{`@media print { .no-print { display: none !important; } @page { margin: 14mm; } body { background: #fff; } }`}</style>
 
@@ -199,6 +207,7 @@ export default async function OrgReportPage({
         団体の活動の振り返りや、年次報告・支援者への報告にご活用ください。他団体との比較・順位付けを目的としたものではありません。
       </p>
     </div>
+    </>
   );
 }
 

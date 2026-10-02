@@ -3,8 +3,9 @@
 // DATABASE_URL が設定されていれば Prisma（本番DB）、未設定ならインメモリ（デモ）を使う。
 // UI（Server Components / Server Actions）はこの層のみを呼ぶ。
 
-import type { Organization, MonthlyReport, ReportInput, ReportStatus, Species, UserProfile, AuditEntry } from '../types';
+import type { Organization, MonthlyReport, ReportInput, ReportStatus, Species, UserProfile, AuditEntry, Announcement, PortalSettings } from '../types';
 import { isDatabaseConfigured } from '../db';
+import { DEFAULT_SETTINGS } from '../deadline';
 import * as memory from './memory-repo';
 import * as database from './prisma-repo';
 
@@ -73,4 +74,42 @@ export async function recordAudit(e: Omit<AuditEntry, 'id' | 'createdAt' | 'acto
 }
 export function listAudit(limit = 200): Promise<AuditEntry[]> {
   return impl().listAudit(limit);
+}
+
+// お知らせ・設定は表示の補助。テーブル未作成（マイグレーション前）でも画面を止めない。
+async function orFallback<T>(p: Promise<T>, fallback: T, what: string): Promise<T> {
+  try {
+    return await p;
+  } catch (err) {
+    console.error(`[portal] ${what} を読み込めませんでした`, err);
+    return fallback;
+  }
+}
+
+export function listAnnouncements(): Promise<Announcement[]> {
+  return orFallback(impl().listAnnouncements(), [], 'お知らせ');
+}
+export function saveAnnouncement(a: Pick<Announcement, 'title' | 'body' | 'pinned'>, id?: string, by?: string): Promise<Announcement> {
+  return impl().saveAnnouncement(a, id, by);
+}
+export function deleteAnnouncement(id: string): Promise<void> {
+  return impl().deleteAnnouncement(id);
+}
+export function readAnnouncementIds(userId: string): Promise<string[]> {
+  return orFallback(impl().readAnnouncementIds(userId), [], '既読');
+}
+export function markAnnouncementsRead(userId: string, ids: string[]): Promise<void> {
+  return impl().markAnnouncementsRead(userId, ids);
+}
+/** 未読のお知らせ件数 */
+export async function unreadAnnouncementCount(userId: string): Promise<number> {
+  const [all, read] = await Promise.all([listAnnouncements(), readAnnouncementIds(userId)]);
+  const seen = new Set(read);
+  return all.filter((a) => !seen.has(a.id)).length;
+}
+export function getSettings(): Promise<PortalSettings> {
+  return orFallback(impl().getSettings(), DEFAULT_SETTINGS, '設定');
+}
+export function saveSettings(s: PortalSettings): Promise<void> {
+  return impl().saveSettings(s);
 }

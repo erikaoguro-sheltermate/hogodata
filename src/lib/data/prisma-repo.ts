@@ -5,8 +5,9 @@
 import { prisma } from '../db';
 import type {
   Organization, MonthlyReport, ReportInput, ReportStatus, Species, AnimalKind, Region,
-  UserProfile, AuditEntry, AuditAction, Role,
+  UserProfile, AuditEntry, AuditAction, Role, Announcement, PortalSettings,
 } from '../types';
+import { DEFAULT_SETTINGS } from '../deadline';
 import type { ReportFilter } from './store';
 
 const REPORT_INCLUDE = {
@@ -324,4 +325,57 @@ export async function listAudit(limit: number): Promise<AuditEntry[]> {
     summary: (r.diff as { summary?: string } | null)?.summary ?? null,
     createdAt: r.createdAt.toISOString(),
   }));
+}
+
+// ============================================================
+// Announcements / Settings
+// ============================================================
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toAppAnnouncement(a: any): Announcement {
+  return {
+    id: a.id, title: a.title, body: a.body, pinned: a.pinned,
+    publishedAt: a.publishedAt.toISOString(), updatedAt: a.updatedAt.toISOString(),
+  };
+}
+export async function listAnnouncements(): Promise<Announcement[]> {
+  const rows = await prisma.announcement.findMany({ orderBy: [{ pinned: 'desc' }, { publishedAt: 'desc' }] });
+  return rows.map(toAppAnnouncement);
+}
+export async function saveAnnouncement(a: Pick<Announcement, 'title' | 'body' | 'pinned'>, id?: string, by?: string): Promise<Announcement> {
+  const row = id
+    ? await prisma.announcement.update({ where: { id }, data: a })
+    : await prisma.announcement.create({ data: { ...a, createdById: by ?? null } });
+  return toAppAnnouncement(row);
+}
+export async function deleteAnnouncement(id: string): Promise<void> {
+  await prisma.announcement.delete({ where: { id } });
+}
+export async function readAnnouncementIds(userId: string): Promise<string[]> {
+  const rows = await prisma.announcementRead.findMany({ where: { userId }, select: { announcementId: true } });
+  return rows.map((r) => r.announcementId);
+}
+export async function markAnnouncementsRead(userId: string, ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  await prisma.announcementRead.createMany({
+    data: ids.map((announcementId) => ({ userId, announcementId })),
+    skipDuplicates: true,
+  });
+}
+
+const SETTING_KEYS = ['deadlineDay', 'contactEmail', 'contactNote'] as const;
+export async function getSettings(): Promise<PortalSettings> {
+  const rows = await prisma.appSetting.findMany({ where: { key: { in: [...SETTING_KEYS] } } });
+  const v = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  return {
+    deadlineDay: v.deadlineDay ? Number(v.deadlineDay) : DEFAULT_SETTINGS.deadlineDay,
+    contactEmail: v.contactEmail ?? DEFAULT_SETTINGS.contactEmail,
+    contactNote: v.contactNote ?? DEFAULT_SETTINGS.contactNote,
+  };
+}
+export async function saveSettings(s: PortalSettings): Promise<void> {
+  await prisma.$transaction(SETTING_KEYS.map((key) => prisma.appSetting.upsert({
+    where: { key },
+    update: { value: String(s[key]) },
+    create: { key, value: String(s[key]) },
+  })));
 }

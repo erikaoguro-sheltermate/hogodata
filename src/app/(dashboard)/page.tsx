@@ -1,5 +1,8 @@
 import Link from 'next/link';
-import { listOrganizations, listReports } from '@/lib/data/repo';
+import { listOrganizations, listReports, getSettings } from '@/lib/data/repo';
+import { previousYearMonth } from '@/lib/data/analytics';
+import { orgMonthStatus } from '@/lib/submissions';
+import { deadlineFor, formatDeadline } from '@/lib/deadline';
 import { summarize } from '@/lib/data/analytics';
 import { Card, CardBody, StatCard, Badge, buttonClass, SectionTitle } from '@/components/ui';
 import { SPECIES_LABEL, prefectureByCode } from '@/lib/masters';
@@ -13,41 +16,40 @@ export default async function DashboardPage() {
   if (session.role === 'ORG_USER') return <OrgHome session={session} />;
   if (session.role === 'VIEWER') redirect('/analytics');
 
-  const [orgs, allReports] = await Promise.all([listOrganizations(), listReports()]);
-
-  // 最新の対象期間（デモのシードは 2026-05 が最新）
-  const latest = allReports.reduce<{ year: number; month: number } | null>((acc, r) => {
-    if (!acc || r.year > acc.year || (r.year === acc.year && r.month > acc.month)) return { year: r.year, month: r.month };
-    return acc;
-  }, null) ?? { year: 2026, month: 5 };
-
-  const monthReports = allReports.filter((r) => r.year === latest.year && r.month === latest.month);
+  // 対象は「先月分」（団体が今月提出する月）
+  const latest = previousYearMonth();
+  const [orgs, monthReports, settings] = await Promise.all([
+    listOrganizations(), listReports({ year: latest.year, month: latest.month }), getSettings(),
+  ]);
   const submitted = monthReports.filter((r) => r.status !== 'DRAFT');
-  const summary = summarize(monthReports);
+  const summary = summarize(submitted);
+  const dl = deadlineFor(latest.year, latest.month, settings.deadlineDay);
 
-  const submittedOrgIds = new Set(submitted.map((r) => r.organizationId));
-  const unsubmitted = orgs.filter((o) => o.isActive && !submittedOrgIds.has(o.id));
+  const unsubmitted = orgs.filter((o) => o.isActive && orgMonthStatus(o, monthReports, latest.year, latest.month).state !== 'done');
 
   return (
     <div>
       <div className="mb-6 flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">ダッシュボード</h1>
-          <p className="mt-1 text-sm text-slate-500">{ymLabel(latest.year, latest.month)} の入力状況</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {ymLabel(latest.year, latest.month)}分の入力状況 ・ 提出期限 {formatDeadline(dl.date)}
+            {dl.state === 'overdue' ? '（過ぎています）' : `（あと ${dl.daysLeft} 日）`}
+          </p>
         </div>
         <Link href="/reports/new" className={buttonClass('primary')}>＋ 月次レポートを入力</Link>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="登録団体数" value={formatNumber(orgs.filter((o) => o.isActive).length)} sub="アクティブな団体" />
-        <StatCard label="当月 提出済みレポート" value={formatNumber(submitted.length)} accent="emerald" sub={`下書き ${monthReports.length - submitted.length} 件`} />
-        <StatCard label="未提出の団体" value={formatNumber(unsubmitted.length)} accent="amber" sub="当月レポート未提出" />
-        <StatCard label="当月 新規収容（合計）" value={formatNumber(summary.intakeTotal)} accent="sky" sub={`転帰 ${formatNumber(summary.outcomeTotal)} 頭`} />
+        <StatCard label="提出済みレポート" value={formatNumber(submitted.length)} accent="emerald" sub={`下書き ${monthReports.length - submitted.length} 件`} />
+        <StatCard label="未完了の団体" value={formatNumber(unsubmitted.length)} accent="amber" sub="下書き・片方のみ・未着手" />
+        <StatCard label="新規収容（提出分の合計）" value={formatNumber(summary.intakeTotal)} accent="sky" sub={`転帰 ${formatNumber(summary.outcomeTotal)} 頭`} />
       </div>
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <SectionTitle subtitle="当月のレポート提出状況">提出状況</SectionTitle>
+          <SectionTitle subtitle="この月のレポート（提出済み・下書き）">届いたレポート</SectionTitle>
           <Card>
             <CardBody className="p-0">
               <table className="w-full text-sm">
@@ -61,7 +63,7 @@ export default async function DashboardPage() {
                 </thead>
                 <tbody>
                   {monthReports.length === 0 && (
-                    <tr><td colSpan={4} className="px-4 py-6 text-center text-slate-400">当月のレポートはまだありません</td></tr>
+                    <tr><td colSpan={4} className="px-4 py-6 text-center text-slate-400">この月のレポートはまだありません</td></tr>
                   )}
                   {monthReports.map((r) => {
                     const org = orgs.find((o) => o.id === r.organizationId);
@@ -87,7 +89,7 @@ export default async function DashboardPage() {
         </div>
 
         <div>
-          <SectionTitle subtitle="当月レポート未提出">要フォロー</SectionTitle>
+          <SectionTitle subtitle="まだ提出が終わっていない団体">要フォロー</SectionTitle>
           <Card>
             <CardBody>
               {unsubmitted.length === 0 ? (
@@ -97,7 +99,7 @@ export default async function DashboardPage() {
                   {unsubmitted.map((o) => (
                     <li key={o.id} className="flex items-center justify-between gap-2 rounded-lg bg-amber-50 px-3 py-2">
                       <span className="text-sm text-slate-700">{o.name}</span>
-                      <Link href={`/reports/new?org=${o.id}`} className="text-xs font-medium text-amber-700 hover:underline">入力</Link>
+                      <Link href={`/reports/new?org=${o.id}&year=${latest.year}&month=${latest.month}`} className="text-xs font-medium text-amber-700 hover:underline">代行入力</Link>
                     </li>
                   ))}
                 </ul>
@@ -106,6 +108,7 @@ export default async function DashboardPage() {
           </Card>
 
           <div className="mt-4 grid gap-2">
+            <Link href={`/submissions?y=${latest.year}&m=${latest.month}`} className={buttonClass('primary')}>📋 提出状況を見る・連絡する</Link>
             <Link href="/analytics" className={buttonClass('secondary')}>📊 集計ダッシュボードを見る</Link>
             <Link href="/organizations" className={buttonClass('secondary')}>🏢 団体を管理する</Link>
           </div>

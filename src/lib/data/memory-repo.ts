@@ -1,7 +1,7 @@
 // JASA Data Hub — インメモリ版データアクセス（デモ/開発用）。
 // store.ts（シード済みインメモリ）を非同期APIでラップする。
 
-import type { Organization, MonthlyReport, ReportInput, ReportStatus, Species, UserProfile, AuditEntry } from '../types';
+import type { Organization, MonthlyReport, ReportInput, ReportStatus, Species, UserProfile, AuditEntry, Announcement, PortalSettings } from '../types';
 import * as store from './store';
 
 export async function listOrganizations(): Promise<Organization[]> {
@@ -57,4 +57,26 @@ export async function recordAudit(e: Omit<AuditEntry, 'id' | 'createdAt' | 'acto
 }
 export async function listAudit(limit: number): Promise<AuditEntry[]> {
   return store._listAudit(limit);
+}
+
+export async function listAnnouncements(): Promise<Announcement[]> {
+  return store._listAnnouncements();
+}
+export async function saveAnnouncement(a: Pick<Announcement, 'title' | 'body' | 'pinned'>, id?: string, _by?: string): Promise<Announcement> {
+  return store._saveAnnouncement(a, id);
+}
+export async function deleteAnnouncement(id: string): Promise<void> {
+  store._deleteAnnouncement(id);
+}
+export async function readAnnouncementIds(userId: string): Promise<string[]> {
+  return store._readAnnouncementIds(userId);
+}
+export async function markAnnouncementsRead(userId: string, ids: string[]): Promise<void> {
+  store._markAnnouncementsRead(userId, ids);
+}
+export async function getSettings(): Promise<PortalSettings> {
+  return store._getSettings();
+}
+export async function saveSettings(s: PortalSettings): Promise<void> {
+  store._saveSettings(s);
 }

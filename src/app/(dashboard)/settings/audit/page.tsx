@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { listAudit } from '@/lib/data/repo';
 import { requireRole } from '@/lib/auth/session';
 import { Card, CardBody, Badge } from '@/components/ui';
+import { SettingsTabs } from '../SettingsTabs';
 import type { AuditAction } from '@/lib/types';
 
 const ACTION_LABEL: Record<AuditAction, string> = {
@@ -21,11 +22,11 @@ export default async function AuditPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <Link href="/settings/users" className="text-sm text-slate-400 hover:text-slate-600">← ユーザー・権限</Link>
-        <h1 className="mt-1 text-2xl font-bold text-slate-800">変更履歴</h1>
-        <p className="mt-1 text-sm text-slate-500">誰がいつ何をしたか（直近 200 件）</p>
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold text-slate-800">設定</h1>
       </div>
+      <SettingsTabs current="/settings/audit" />
+      <p className="mb-4 text-sm text-slate-500">誰がいつ何をしたか（直近 200 件）</p>
       <Card>
         <CardBody className="overflow-x-auto p-0">
           <table className="w-full text-sm">
