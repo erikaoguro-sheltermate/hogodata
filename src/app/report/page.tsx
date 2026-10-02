@@ -4,6 +4,7 @@ import { SPECIES_LABEL, REGION_BLOCKS } from '@/lib/masters';
 import { formatNumber } from '@/lib/format';
 import type { Species } from '@/lib/types';
 import { PrintBar } from './PrintButton';
+import { LogoMark } from '@/components/icons';
 import { BreakdownTable } from './BreakdownTable';
 import { requireSession } from '@/lib/auth/session';
 
@@ -51,7 +52,7 @@ export default async function ReportPage({
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🐾</span>
+              <LogoMark size={28} className="text-emerald-700" />
               <span className="text-lg font-bold">どうぶつ保護データプロジェクト</span>
             </div>
             <h1 className="mt-1 text-2xl font-bold">どうぶつ保護データ 活動統計レポート</h1>

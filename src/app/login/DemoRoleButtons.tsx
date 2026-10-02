@@ -23,7 +23,7 @@ export function DemoRoleButtons() {
       </p>
       {ROLES.map((r) => (
         <button key={r.role} onClick={() => enter(r.role)}
-          className="w-full rounded-xl border border-slate-200 px-4 py-3 text-left transition-colors hover:border-emerald-300 hover:bg-emerald-50">
+          className="w-full rounded-lg border border-slate-200 px-4 py-3 text-left transition-colors hover:border-emerald-300 hover:bg-emerald-50">
           <div className="text-sm font-semibold text-slate-700">{r.label}</div>
           <div className="text-xs text-slate-400">{r.desc}</div>
         </button>

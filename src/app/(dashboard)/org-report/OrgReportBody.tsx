@@ -4,6 +4,7 @@ import { SPECIES_LABEL, prefectureByCode } from '@/lib/masters';
 import { formatNumber, ymLabel } from '@/lib/format';
 import type { MonthlyReport, Organization, Species } from '@/lib/types';
 import { BreakdownTable } from '../../report/BreakdownTable';
+import { LogoMark } from '@/components/icons';
 import { TrendChart } from '../analytics/AnalyticsCharts';
 
 export const QUARTER_LABEL: Record<number, string> = { 1: '第1四半期（4〜6月）', 2: '第2四半期（7〜9月）', 3: '第3四半期（10〜12月）', 4: '第4四半期（1〜3月）' };
@@ -47,7 +48,7 @@ export function OrgReportBody({ org, orgReports, nationalReports, fy, q }: {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🐾</span>
+              <LogoMark size={28} className="text-emerald-700" />
               <span className="text-lg font-bold">どうぶつ保護データプロジェクト</span>
             </div>
             <h1 className="mt-1 text-xl font-bold md:text-2xl">{org.name} 活動データレポート</h1>

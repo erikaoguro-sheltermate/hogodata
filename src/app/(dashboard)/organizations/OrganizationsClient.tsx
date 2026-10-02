@@ -170,7 +170,7 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
                     const on = (form.animalHandling ?? []).includes(h);
                     return (
                       <button type="button" key={h} onClick={() => toggleHandling(h)}
-                        className={on ? 'rounded-full bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white' : 'rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
+                        className={on ? 'rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white' : 'rounded-md bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
                         {h}
                       </button>
                     );
@@ -185,7 +185,7 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
                     const on = (form.animalTypes ?? []).includes(k.code);
                     return (
                       <button type="button" key={k.code} onClick={() => toggleAnimal(k.code)}
-                        className={on ? 'rounded-full bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white' : 'rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
+                        className={on ? 'rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white' : 'rounded-md bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
                         {k.name}
                       </button>
                     );
@@ -200,7 +200,7 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
                     const on = (form.activities ?? []).includes(a);
                     return (
                       <button type="button" key={a} onClick={() => toggleActivity(a)}
-                        className={on ? 'rounded-full bg-sky-600 px-3 py-1.5 text-sm font-medium text-white' : 'rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
+                        className={on ? 'rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white' : 'rounded-md bg-slate-100 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
                         {a}
                       </button>
                     );
@@ -208,7 +208,7 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
                   {/* プリセット外（自由記入で追加された）活動 */}
                   {(form.activities ?? []).filter((a) => !ACTIVITY_OPTIONS.includes(a)).map((a) => (
                     <button type="button" key={a} onClick={() => toggleActivity(a)}
-                      className="inline-flex items-center gap-1 rounded-full bg-sky-600 px-3 py-1.5 text-sm font-medium text-white">
+                      className="inline-flex items-center gap-1 rounded-md bg-sky-600 px-3 py-1.5 text-sm font-medium text-white">
                       {a} <span className="text-sky-200">×</span>
                     </button>
                   ))}

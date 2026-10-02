@@ -47,7 +47,7 @@ export function ReviewQueueClient({ rows }: { rows: ReviewRow[] }) {
   }
 
   if (rows.length === 0) {
-    return <Card><CardBody><p className="py-6 text-center text-sm text-slate-400">確認待ちのレポートはありません 🎉{msg && <><br />{msg}</>}</p></CardBody></Card>;
+    return <Card><CardBody><p className="py-6 text-center text-sm text-slate-400">確認待ちのレポートはありません。{msg && <><br />{msg}</>}</p></CardBody></Card>;
   }
 
   return (

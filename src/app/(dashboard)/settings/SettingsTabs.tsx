@@ -16,7 +16,7 @@ export function SettingsTabs({ current }: { current: string }) {
           href={t.href}
           aria-current={current === t.href ? 'page' : undefined}
           className={cn(
-            'rounded-full px-4 py-1.5 text-sm',
+            'rounded-md px-4 py-1.5 text-sm',
             current === t.href ? 'bg-slate-800 font-medium text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
           )}
         >

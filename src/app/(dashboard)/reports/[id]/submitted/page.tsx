@@ -1,5 +1,6 @@
 // 提出の受付画面：受け付けた内容の控えと、次にやること
 import Link from 'next/link';
+import { CheckIcon } from '@/components/icons';
 import { notFound } from 'next/navigation';
 import { getReport, getOrganization, listReports } from '@/lib/data/repo';
 import { requireRole } from '@/lib/auth/session';
@@ -45,7 +46,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
   return (
     <div className="mx-auto max-w-xl">
       <div className="mb-6 text-center">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-700">✓</div>
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><CheckIcon size={26} /></div>
         <h1 className="text-2xl font-bold text-slate-800">{resubmitted ? '修正を受け付けました' : '提出を受け付けました'}</h1>
         <p className="mt-1 text-sm text-slate-500">{org?.name} ・ {label}</p>
       </div>

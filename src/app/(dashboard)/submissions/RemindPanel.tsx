@@ -25,7 +25,7 @@ export function RemindPanel({ emails, missing, subject, body }: {
         <pre className="whitespace-pre-wrap rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-700">件名：{subject}{'\n\n'}{body}</pre>
         <div className="flex flex-wrap gap-2">
           {emails.length > 0 && (
-            <a href={mailto} className="inline-flex items-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+            <a href={mailto} className="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
               メールソフトで開く（BCC {emails.length} 件）
             </a>
           )}

@@ -27,7 +27,7 @@ function Info({ label, value }: { label: string; value: string }) {
 function StatusCell({ report, href }: { report: MonthlyReport | undefined; href: string }) {
   if (!report) {
     return (
-      <Link href={href} className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100">
+      <Link href={href} className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100">
         未入力 <span className="text-amber-400">＋</span>
       </Link>
     );
@@ -79,7 +79,7 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
             </p>
           </div>
           <div className="flex gap-2">
-            <Link href={`/org-report/${org.id}`} className={buttonClass('secondary')}>📄 還元レポート</Link>
+            <Link href={`/org-report/${org.id}`} className={buttonClass('secondary')}>還元レポート</Link>
             <Link href={`/reports/new?org=${org.id}`} className={buttonClass('primary')}>＋ レポートを入力</Link>
           </div>
         </div>
@@ -183,8 +183,8 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
                   <th className="px-4 py-3 font-medium">対象月</th>
-                  <th className="px-4 py-3 font-medium">🐕 犬</th>
-                  <th className="px-4 py-3 font-medium">🐈 猫</th>
+                  <th className="px-4 py-3 font-medium">犬</th>
+                  <th className="px-4 py-3 font-medium">猫</th>
                 </tr>
               </thead>
               <tbody>

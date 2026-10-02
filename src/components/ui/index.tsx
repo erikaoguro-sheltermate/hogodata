@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 // ---- Card ----
 export function Card({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn('rounded-2xl border border-slate-200 bg-white shadow-sm', className)}>{children}</div>;
+  return <div className={cn('rounded-lg border border-slate-200 bg-white', className)}>{children}</div>;
 }
 export function CardBody({ className, children }: { className?: string; children: React.ReactNode }) {
   return <div className={cn('p-5', className)}>{children}</div>;
@@ -25,7 +25,7 @@ const SIZES: Record<Size, string> = { sm: 'min-h-10 px-3 py-1.5 text-sm md:min-h
 
 export function buttonClass(variant: Variant = 'primary', size: Size = 'md', className?: string) {
   return cn(
-    'inline-flex items-center justify-center gap-2 rounded-full border font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-2 rounded-md border font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
     VARIANTS[variant], SIZES[size], className,
   );
 }
@@ -46,7 +46,7 @@ export function Badge({ color = 'slate', children }: { color?: 'slate' | 'green'
     blue: 'bg-sky-100 text-sky-700',
     red: 'bg-red-100 text-red-700',
   };
-  return <span className={cn('inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium', colors[color])}>{children}</span>;
+  return <span className={cn('inline-flex items-center whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium', colors[color])}>{children}</span>;
 }
 
 // ---- Form ----
@@ -62,7 +62,7 @@ export function Field({ label, hint, children, required }: { label: string; hint
   );
 }
 
-const inputBase = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100';
+const inputBase = 'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100';
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...props }, ref) {

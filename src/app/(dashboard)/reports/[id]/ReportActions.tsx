@@ -61,7 +61,7 @@ export function ReportActions({ id, status, role, label }: { id: string; status:
       </div>
       {error && !reopening && <p role="alert" className="text-sm text-red-600">{error}</p>}
       {reopening && (
-        <form onSubmit={reopen} className="w-80 max-w-full space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+        <form onSubmit={reopen} className="w-80 max-w-full space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
           <label className="block text-sm font-medium text-amber-900">
             団体に伝える理由
             <textarea

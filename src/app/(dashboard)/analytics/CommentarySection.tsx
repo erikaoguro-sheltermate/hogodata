@@ -61,7 +61,7 @@ export function CommentarySection({
               {canEdit && (
                 <div className="mt-3">
                   <Button variant="secondary" size="sm" onClick={() => { setEditing(true); setBody(savedBody ?? draft); }}>
-                    ✎ 加筆・修正する
+                    加筆・修正する
                   </Button>
                 </div>
               )}

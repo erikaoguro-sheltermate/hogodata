@@ -19,6 +19,7 @@ import { Card, CardBody, Button, Badge, Field, Input, Select } from '@/component
 import { formatNumber, ymLabel } from '@/lib/format';
 import { saveReportAction, getPreviousEndingAction, type PreviousEnding } from './actions';
 import { cn } from '@/lib/utils';
+import { ChevronIcon } from '@/components/icons';
 
 type SectionKind = 'intake' | 'outcome';
 
@@ -258,7 +259,7 @@ export function ReportForm({
         )}
         {prevEnding && !beginningMismatch && autoFilled && (
           <p className="-mt-4 rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
-            ✓ {prevEnding.year}年{prevEnding.month}月の記録終了時の頭数（{formatNumber(prevEnding.endingCount)}頭・うち一時預かり {formatNumber(prevEnding.endingFosterCount)}）を自動で入れました。
+            {prevEnding.year}年{prevEnding.month}月の記録終了時の頭数（{formatNumber(prevEnding.endingCount)}頭・うち一時預かり {formatNumber(prevEnding.endingFosterCount)}）を自動で入れました。
           </p>
         )}
         {prevEnding && beginningMismatch && (
@@ -361,7 +362,7 @@ export function ReportForm({
               {balance.balanced
                 ? <span className="font-semibold text-emerald-700">一致</span>
                 : <span className="font-semibold text-amber-700">差分 {balance.delta > 0 ? '+' : ''}{balance.delta}</span>}
-              {validation.errors.length > 0 && <span className="ml-2 text-red-600">⚠ 入力に誤りがあります</span>}
+              {validation.errors.length > 0 && <span className="ml-2 text-red-600">入力に誤りがあります</span>}
             </div>
             <Button size="sm" onClick={() => handleSave(mainSubmit)} disabled={saving || validation.errors.length > 0}>
               {saving ? '送信中…' : mainLabel}
@@ -379,7 +380,7 @@ export function ReportForm({
             <Card>
               <CardBody className="space-y-2">
                 {validation.errors.map((e, i) => (
-                  <div key={`e${i}`} className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">⚠ {e.message}</div>
+                  <div key={`e${i}`} className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{e.message}</div>
                 ))}
                 {validation.warnings.map((w, i) => (
                   <div key={`w${i}`} className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">注意：{w.message}</div>
@@ -468,16 +469,16 @@ function CategoryMatrix({ section, code, name, requiresRegion, catOnly, getCount
   };
 
   return (
-    <div className="rounded-xl border border-slate-200">
+    <div className="rounded-lg border border-slate-200">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={panelId}
-        className={cn('flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left', open ? 'rounded-t-xl border-b border-slate-100 bg-slate-50' : 'rounded-xl bg-white')}
+        className={cn('flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left', open ? 'rounded-t-xl border-b border-slate-100 bg-slate-50' : 'rounded-lg bg-white')}
       >
         <span className="text-sm font-medium text-slate-700">
-          <span className="mr-2 inline-block w-3 text-slate-400">{open ? '▾' : '▸'}</span>
+          <ChevronIcon open={open} size={14} className="mr-2 inline-block text-slate-400" />
           {name} {catOnly && <Badge color="blue">猫のみ</Badge>}
         </span>
         <span className="text-xs text-slate-500">
@@ -545,7 +546,7 @@ function BalancePanel({ balance, beginning, beginningFoster, endingFoster }: {
       <CardBody>
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm font-bold text-slate-700">収支整合チェック</span>
-          {ok ? <Badge color="green">一致 ✓</Badge> : <Badge color="amber">不一致</Badge>}
+          {ok ? <Badge color="green">一致</Badge> : <Badge color="amber">不一致</Badge>}
         </div>
         <dl className="space-y-1.5 text-sm">
           <Row label="記録開始時" value={beginning} />

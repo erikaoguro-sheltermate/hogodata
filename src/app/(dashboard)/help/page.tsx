@@ -76,7 +76,7 @@ export default async function HelpPage() {
       <SectionTitle>よくある質問</SectionTitle>
       <div className="mb-8 space-y-2">
         {FAQ.map(([q, a]) => (
-          <details key={q} className="group rounded-xl border border-slate-200 bg-white px-5 py-3">
+          <details key={q} className="group rounded-lg border border-slate-200 bg-white px-5 py-3">
             <summary className="cursor-pointer list-none text-sm font-semibold text-slate-700">
               <span className="mr-2 text-emerald-600">Q.</span>{q}
             </summary>

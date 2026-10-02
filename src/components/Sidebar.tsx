@@ -7,11 +7,14 @@ import { cn } from '@/lib/utils';
 import type { Role } from '@/lib/types';
 import { ROLE_LABEL } from '@/lib/masters';
 import { logout } from '@/app/login/actions';
+import {
+  HomeIcon, ClipboardIcon, FileIcon, ChartIcon, MegaphoneIcon, BuildingIcon, SettingsIcon, UsersIcon, HelpIcon, KeyIcon, MenuIcon, CloseIcon, LogoMark,
+} from '@/components/icons';
 
 interface NavItem {
   href: string;
   label: string;
-  icon: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   roles: Role[];
   /** このパスで始まる画面でも選択中にする */
   match?: string[];
@@ -19,18 +22,18 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { href: '/', label: 'ダッシュボード', icon: '🏠', roles: ['ADMIN'] },
-  { href: '/', label: 'ホーム', icon: '🏠', roles: ['ORG_USER'] },
-  { href: '/submissions', label: '提出状況', icon: '📋', roles: ['ADMIN'], badge: 'review', match: ['/org-report/all'] },
-  { href: '/reports', label: '月次レポート', icon: '📝', roles: ['ADMIN'] },
-  { href: '/reports', label: 'レポート', icon: '📝', roles: ['ORG_USER'], match: ['/org-report'] },
-  { href: '/analytics', label: '全国の集計', icon: '📊', roles: ['ADMIN', 'ORG_USER', 'VIEWER'], match: ['/report'] },
-  { href: '/announcements', label: 'お知らせ', icon: '📣', roles: ['ADMIN', 'ORG_USER', 'VIEWER'], badge: 'unread' },
-  { href: '/organizations', label: '団体マスタ', icon: '🏢', roles: ['ADMIN'], match: ['/org-report'] },
-  { href: '/masters', label: 'マスタ管理', icon: '⚙️', roles: ['ADMIN'] },
-  { href: '/settings/users', label: '設定', icon: '👥', roles: ['ADMIN'], match: ['/settings'] },
-  { href: '/help', label: 'ヘルプ', icon: '❓', roles: ['ADMIN', 'ORG_USER', 'VIEWER'] },
-  { href: '/account', label: 'アカウント', icon: '🔑', roles: ['ADMIN', 'ORG_USER', 'VIEWER'] },
+  { href: '/', label: 'ダッシュボード', icon: HomeIcon, roles: ['ADMIN'] },
+  { href: '/', label: 'ホーム', icon: HomeIcon, roles: ['ORG_USER'] },
+  { href: '/submissions', label: '提出状況', icon: ClipboardIcon, roles: ['ADMIN'], badge: 'review', match: ['/org-report/all'] },
+  { href: '/reports', label: '月次レポート', icon: FileIcon, roles: ['ADMIN'] },
+  { href: '/reports', label: 'レポート', icon: FileIcon, roles: ['ORG_USER'], match: ['/org-report'] },
+  { href: '/analytics', label: '全国の集計', icon: ChartIcon, roles: ['ADMIN', 'ORG_USER', 'VIEWER'], match: ['/report'] },
+  { href: '/announcements', label: 'お知らせ', icon: MegaphoneIcon, roles: ['ADMIN', 'ORG_USER', 'VIEWER'], badge: 'unread' },
+  { href: '/organizations', label: '団体マスタ', icon: BuildingIcon, roles: ['ADMIN'], match: ['/org-report'] },
+  { href: '/masters', label: 'マスタ管理', icon: SettingsIcon, roles: ['ADMIN'] },
+  { href: '/settings/users', label: '設定', icon: UsersIcon, roles: ['ADMIN'], match: ['/settings'] },
+  { href: '/help', label: 'ヘルプ', icon: HelpIcon, roles: ['ADMIN', 'ORG_USER', 'VIEWER'] },
+  { href: '/account', label: 'アカウント', icon: KeyIcon, roles: ['ADMIN', 'ORG_USER', 'VIEWER'] },
 ];
 
 // デモ切替ボタン用の短い呼び名。表示名の横には masters の正式名を使う
@@ -45,7 +48,7 @@ function isActive(item: NavItem, pathname: string): boolean {
 function Brand() {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-lg">🐾</div>
+      <LogoMark size={34} className="shrink-0 text-emerald-700" />
       <div className="text-[15px] font-bold leading-snug text-slate-800">
         どうぶつ保護<br />データプロジェクト
       </div>
@@ -79,19 +82,19 @@ export function Sidebar({ role, displayName, mode, unreadCount, reviewCount = 0 
             aria-current={on ? 'page' : undefined}
             onClick={() => setOpen(false)}
             className={cn(
-              'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
+              'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
               on ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-100',
             )}
           >
-            <span className="text-base">{item.icon}</span>
+            <item.icon size={18} className={on ? 'text-emerald-700' : 'text-slate-400'} />
             <span className="flex-1">{item.label}</span>
             {item.badge === 'review' && reviewCount > 0 && (
-              <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[11px] font-bold text-white" aria-label={`確認待ち ${reviewCount} 件`}>
+              <span className="rounded-md bg-sky-600 px-2 py-0.5 text-[11px] font-bold text-white" aria-label={`確認待ち ${reviewCount} 件`}>
                 {reviewCount}
               </span>
             )}
             {item.badge === 'unread' && unreadCount > 0 && (
-              <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white" aria-label={`未読 ${unreadCount} 件`}>
+              <span className="rounded-md bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white" aria-label={`未読 ${unreadCount} 件`}>
                 {unreadCount}
               </span>
             )}
@@ -148,7 +151,7 @@ export function Sidebar({ role, displayName, mode, unreadCount, reviewCount = 0 
           aria-controls="mobile-menu"
           className="relative rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
         >
-          {open ? '閉じる' : '☰ メニュー'}
+          <span className="inline-flex items-center gap-1.5">{open ? <CloseIcon size={18} /> : <MenuIcon size={18} />}{open ? '閉じる' : 'メニュー'}</span>
           {!open && (unreadCount > 0 || reviewCount > 0) && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />}
         </button>
       </header>

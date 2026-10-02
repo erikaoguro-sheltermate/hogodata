@@ -49,7 +49,7 @@ export default async function EditReportPage({ params }: { params: Promise<{ id:
 function StatusNotice({ report, isOrgUser }: { report: NonNullable<Awaited<ReturnType<typeof getReport>>>; isOrgUser: boolean }) {
   if (isReturned(report)) {
     return (
-      <div role="alert" className="mb-6 rounded-xl border-2 border-red-200 bg-red-50 px-5 py-4">
+      <div role="alert" className="mb-6 rounded-lg border-2 border-red-200 bg-red-50 px-5 py-4">
         <div className="text-sm font-bold text-red-800">事務局から差し戻されています（{formatDate(report.returnedAt)}）</div>
         <p className="mt-1 whitespace-pre-wrap text-sm text-red-900">{report.returnNote}</p>
         <p className="mt-2 text-xs text-red-700">
@@ -60,7 +60,7 @@ function StatusNotice({ report, isOrgUser }: { report: NonNullable<Awaited<Retur
   }
   if (report.status === 'SUBMITTED') {
     return (
-      <div className="mb-6 rounded-xl border border-sky-200 bg-sky-50 px-5 py-3 text-sm text-sky-900">
+      <div className="mb-6 rounded-lg border border-sky-200 bg-sky-50 px-5 py-3 text-sm text-sky-900">
         {isOrgUser
           ? <>提出済みです（{formatDate(report.submittedAt)}）。事務局が確定するまでは、直して「修正して再提出」できます。</>
           : wasResubmitted(report)
@@ -71,7 +71,7 @@ function StatusNotice({ report, isOrgUser }: { report: NonNullable<Awaited<Retur
   }
   if (report.status === 'CONFIRMED') {
     return (
-      <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm text-emerald-900">
+      <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm text-emerald-900">
         事務局が確定しました。{isOrgUser ? '修正が必要な場合は事務局にご連絡ください。' : '修正が必要な場合は「差し戻す」で団体に戻せます。'}
       </div>
     );

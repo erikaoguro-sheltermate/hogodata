@@ -52,7 +52,7 @@ export default async function AnalyticsPage({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <a href={`/report?period=${period}&${exportQs.toString()}`} className={buttonClass('primary')}>📄 PDFレポート</a>
+          <a href={`/report?period=${period}&${exportQs.toString()}`} className={buttonClass('primary')}>PDFレポート</a>
           <a href={`/api/exports/summary?period=${period}&${exportQs.toString()}`} className={buttonClass('secondary')}>⬇ 期間集計CSV</a>
           {isAdmin(session) && (
             <a href={`/api/exports/reports?${exportQs.toString()}`} className={buttonClass('secondary')}>⬇ 生データCSV</a>
@@ -69,7 +69,7 @@ export default async function AnalyticsPage({
           const active = p === period;
           return (
             <Link key={p} href={`/analytics?${qs.toString()}`}
-              className={active ? 'rounded-full bg-slate-800 px-4 py-1.5 text-sm font-medium text-white' : 'rounded-full bg-slate-100 px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
+              className={active ? 'rounded-md bg-slate-800 px-4 py-1.5 text-sm font-medium text-white' : 'rounded-md bg-slate-100 px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-200'}>
               {PERIOD_LABEL[p]}
             </Link>
           );

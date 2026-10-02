@@ -8,9 +8,9 @@ export function PrintBar({ backHref = '/analytics', backLabel = '集計に戻る
       {backHref ? <Link href={backHref} className="text-sm text-slate-400 hover:text-slate-600">← {backLabel}</Link> : <span />}
       <button
         onClick={() => window.print()}
-        className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+        className="rounded-md bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700"
       >
-        📄 PDFで保存 / 印刷
+        PDFで保存 / 印刷
       </button>
     </div>
   );

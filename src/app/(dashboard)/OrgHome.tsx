@@ -15,7 +15,6 @@ import type { MonthlyReport, ReportStatus, Species } from '@/lib/types';
 import type { Session } from '@/lib/auth/session';
 
 const STATUS_COLOR: Record<ReportStatus, 'slate' | 'blue' | 'green'> = { DRAFT: 'slate', SUBMITTED: 'blue', CONFIRMED: 'green' };
-const SPECIES_ICON: Record<Species, string> = { DOG: '🐕', CAT: '🐈' };
 
 function newHref(species: Species, year: number, month: number) {
   return `/reports/new?species=${species}&year=${year}&month=${month}`;
@@ -28,10 +27,10 @@ function DueCard({ orgId, species, report, prev, year, month }: {
   const done = report && report.status !== 'DRAFT';
   const returned = report && isReturned(report);
   return (
-    <div className={done ? 'rounded-xl border border-emerald-200 bg-emerald-50 p-4'
-      : returned ? 'rounded-xl border border-red-200 bg-red-50 p-4' : 'rounded-xl border border-amber-200 bg-amber-50 p-4'}>
+    <div className={done ? 'rounded-lg border border-emerald-200 bg-emerald-50 p-4'
+      : returned ? 'rounded-lg border border-red-200 bg-red-50 p-4' : 'rounded-lg border border-amber-200 bg-amber-50 p-4'}>
       <div className="flex items-center justify-between gap-3">
-        <div className="text-sm font-semibold text-slate-700">{SPECIES_ICON[species]} {SPECIES_LABEL[species]}</div>
+        <div className="text-sm font-semibold text-slate-700">{SPECIES_LABEL[species]}</div>
         {returned ? <Badge color="red">差し戻し</Badge>
           : report ? <Badge color={STATUS_COLOR[report.status]}>{STATUS_LABEL[report.status]}</Badge> : <Badge color="amber">未入力</Badge>}
       </div>
@@ -81,12 +80,12 @@ export async function OrgHome({ session }: { session: Session }) {
           <h1 className="text-2xl font-bold text-slate-800">{org?.name ?? '所属団体'}</h1>
           <p className="mt-1 text-sm text-slate-500">{session.displayName} さん、いつもご協力ありがとうございます。</p>
         </div>
-        <Link href={`/org-report/${orgId}?fy=${fy}`} className={buttonClass('secondary')}>📄 年度のまとめを見る</Link>
+        <Link href={`/org-report/${orgId}?fy=${fy}`} className={buttonClass('secondary')}>年度のまとめを見る</Link>
       </div>
 
       {/* 差し戻し（最優先で目立たせる） */}
       {returnedReports.map((r) => (
-        <div key={r.id} role="alert" className="mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-5">
+        <div key={r.id} role="alert" className="mb-4 rounded-lg border-2 border-red-200 bg-red-50 p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <div className="text-sm font-bold text-red-800">
@@ -105,10 +104,10 @@ export async function OrgHome({ session }: { session: Session }) {
           <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg font-bold text-slate-800">{ymLabel(due.year, due.month)}分の報告</h2>
             {allDone ? (
-              <span className="text-sm text-emerald-700">提出ありがとうございました 🎉</span>
+              <span className="text-sm text-emerald-700">ご提出ありがとうございました</span>
             ) : (
-              <span className={dl.state === 'overdue' ? 'rounded-full bg-red-50 px-3 py-1 text-sm font-medium text-red-700'
-                : dl.state === 'soon' ? 'rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-800' : 'text-sm text-slate-500'}>
+              <span className={dl.state === 'overdue' ? 'rounded-md bg-red-50 px-3 py-1 text-sm font-medium text-red-700'
+                : dl.state === 'soon' ? 'rounded-md bg-amber-50 px-3 py-1 text-sm font-medium text-amber-800' : 'text-sm text-slate-500'}>
                 提出期限 {formatDeadline(dl.date)}
                 {dl.state === 'overdue' ? '（過ぎています）' : dl.daysLeft === 0 ? '（今日まで）' : `（あと ${dl.daysLeft} 日）`}
               </span>
@@ -164,7 +163,7 @@ export async function OrgHome({ session }: { session: Session }) {
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
                   <th className="whitespace-nowrap px-3 py-3 font-medium md:px-4">対象月</th>
-                  {species.map((s) => <th key={s} className="whitespace-nowrap px-3 py-3 font-medium md:px-4">{SPECIES_ICON[s]} {SPECIES_LABEL[s]}</th>)}
+                  {species.map((s) => <th key={s} className="whitespace-nowrap px-3 py-3 font-medium md:px-4">{SPECIES_LABEL[s]}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -184,7 +183,7 @@ export async function OrgHome({ session }: { session: Session }) {
                             ) : future ? (
                               <span className="text-slate-300">—</span>
                             ) : (
-                              <Link href={newHref(s, fm.year, fm.month)} className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100">
+                              <Link href={newHref(s, fm.year, fm.month)} className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100">
                                 未入力 <span className="text-amber-400">＋</span>
                               </Link>
                             )}

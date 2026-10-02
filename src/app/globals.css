@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc; /* slate-50 */
+  --background: #f6f7f6;
   --foreground: #0f172a; /* slate-900 */
 }
 
@@ -9,6 +9,20 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-noto-sans-jp), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ブランド色：鮮やかな既定の緑ではなく、落ち着いた深緑に寄せる（emerald を上書き） */
+@theme {
+  --color-emerald-50: #f3f7f4;
+  --color-emerald-100: #e3ede6;
+  --color-emerald-200: #c6dacc;
+  --color-emerald-300: #9fbfa9;
+  --color-emerald-400: #729f82;
+  --color-emerald-500: #4f8364;
+  --color-emerald-600: #3d6b50;
+  --color-emerald-700: #31573f;
+  --color-emerald-800: #284634;
+  --color-emerald-900: #1f3829;
 }
 
 body {

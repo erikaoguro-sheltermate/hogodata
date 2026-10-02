@@ -51,13 +51,13 @@ export default async function SubmissionsPage({
           <h1 className="text-2xl font-bold text-slate-800">提出状況</h1>
           <p className="mt-1 text-sm text-slate-500">団体ごとの月次報告の提出状況。未提出の団体への連絡や、団体別の還元レポートもここから。</p>
         </div>
-        <Link href={`/org-report/all?fy=${fy}`} className={buttonClass('secondary', 'sm')}>📄 還元レポートを全団体まとめて</Link>
-        <div className="flex gap-1 rounded-full bg-slate-100 p-1">
-          <Link href={qs({ view: 'month' })} className={cn('rounded-full px-4 py-1.5 text-sm', view === 'month' ? 'bg-white font-medium text-slate-800 shadow-sm' : 'text-slate-500')}>月ごと</Link>
-          <Link href={qs({ view: 'review' })} className={cn('rounded-full px-4 py-1.5 text-sm', view === 'review' ? 'bg-white font-medium text-slate-800 shadow-sm' : 'text-slate-500')}>
-            確認待ち{reviewCount > 0 && <span className="ml-1 rounded-full bg-sky-600 px-1.5 text-[11px] font-bold text-white">{reviewCount}</span>}
+        <Link href={`/org-report/all?fy=${fy}`} className={buttonClass('secondary', 'sm')}>還元レポートを全団体まとめて</Link>
+        <div className="flex gap-1 rounded-md bg-slate-100 p-1">
+          <Link href={qs({ view: 'month' })} className={cn('rounded-md px-4 py-1.5 text-sm', view === 'month' ? 'bg-white font-medium text-slate-800' : 'text-slate-500')}>月ごと</Link>
+          <Link href={qs({ view: 'review' })} className={cn('rounded-md px-4 py-1.5 text-sm', view === 'review' ? 'bg-white font-medium text-slate-800' : 'text-slate-500')}>
+            確認待ち{reviewCount > 0 && <span className="ml-1 rounded-md bg-sky-600 px-1.5 text-[11px] font-bold text-white">{reviewCount}</span>}
           </Link>
-          <Link href={qs({ view: 'year' })} className={cn('rounded-full px-4 py-1.5 text-sm', view === 'year' ? 'bg-white font-medium text-slate-800 shadow-sm' : 'text-slate-500')}>年度の一覧</Link>
+          <Link href={qs({ view: 'year' })} className={cn('rounded-md px-4 py-1.5 text-sm', view === 'year' ? 'bg-white font-medium text-slate-800' : 'text-slate-500')}>年度の一覧</Link>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ function MonthView({ orgs, reports, year, month, deadlineDay, onlyMissing, nav }
           </span>
         </div>
         <Link href={nav.toggle} className={buttonClass(onlyMissing ? 'primary' : 'secondary', 'sm')}>
-          {onlyMissing ? '✓ 未完了のみ表示中' : '未完了のみ表示'}
+          {onlyMissing ? '未完了のみ表示中' : '未完了のみ表示'}
         </Link>
       </div>
 
@@ -144,7 +144,7 @@ function MonthView({ orgs, reports, year, month, deadlineDay, onlyMissing, nav }
                 <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">
                   {rows.length === 0
                     ? <>対象の団体がまだありません。<Link href="/organizations" className="text-emerald-700 hover:underline">団体マスタ</Link>から登録してください。</>
-                    : 'すべての団体が提出済みです 🎉'}
+                    : 'すべての団体が提出済みです。'}
                 </td></tr>
               )}
               {shown.map(({ org, st }) => (

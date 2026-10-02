@@ -1,4 +1,5 @@
 import { Card, CardBody, Button } from '@/components/ui';
+import { LogoMark } from '@/components/icons';
 import { authMode, getSession } from '@/lib/auth/session';
 import { getSettings } from '@/lib/data/repo';
 import { DemoRoleButtons } from './DemoRoleButtons';
@@ -23,10 +24,10 @@ export default async function LoginPage({
   const blocked = mode === 'supabase' && sp.error === 'noaccess' && (await getSession()).userId !== 'anonymous';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-emerald-50 to-slate-50 p-6">
+    <div className="flex min-h-screen items-center justify-center bg-[#f6f7f6] p-6">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-2xl">🐾</div>
+          <LogoMark size={48} className="mx-auto mb-3 text-emerald-700" />
           <h1 className="text-2xl font-bold text-slate-800">どうぶつ保護データプロジェクト</h1>
         </div>
         <Card>

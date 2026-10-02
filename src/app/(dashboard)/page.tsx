@@ -43,7 +43,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="登録団体数" value={formatNumber(orgs.filter((o) => o.isActive).length)} sub="アクティブな団体" />
-        <Link href="/submissions?view=review" className="block rounded-2xl transition-shadow hover:shadow-md">
+        <Link href="/submissions?view=review" className="block rounded-lg transition-shadow hover:shadow-md">
           <StatCard label="確認待ち（全期間）" value={formatNumber(reviewCount)} accent="sky" sub="提出済み・未確定 → 確認する" />
         </Link>
         <StatCard label="未完了の団体" value={formatNumber(unsubmitted.length)} accent="amber" sub="下書き・片方のみ・未着手" />
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
             <CardBody>
               {unsubmitted.length === 0 ? (
                 <p className="text-sm text-slate-400">
-                  {orgs.filter((o) => o.isActive).length === 0 ? '団体がまだ登録されていません。' : '未提出の団体はありません 🎉'}
+                  {orgs.filter((o) => o.isActive).length === 0 ? '団体がまだ登録されていません。' : '未提出の団体はありません。'}
                 </p>
               ) : (
                 <ul className="space-y-2">
@@ -111,9 +111,9 @@ export default async function DashboardPage() {
           </Card>
 
           <div className="mt-4 grid gap-2">
-            <Link href={`/submissions?y=${latest.year}&m=${latest.month}`} className={buttonClass('primary')}>📋 提出状況を見る・連絡する</Link>
-            <Link href="/analytics" className={buttonClass('secondary')}>📊 集計ダッシュボードを見る</Link>
-            <Link href="/organizations" className={buttonClass('secondary')}>🏢 団体を管理する</Link>
+            <Link href={`/submissions?y=${latest.year}&m=${latest.month}`} className={buttonClass('primary')}>提出状況を見る・連絡する</Link>
+            <Link href="/analytics" className={buttonClass('secondary')}>集計ダッシュボードを見る</Link>
+            <Link href="/organizations" className={buttonClass('secondary')}>団体を管理する</Link>
           </div>
         </div>
       </div>
