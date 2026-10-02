@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
+import { GATE_COOKIE, gateToken, safeEqual } from '@/lib/auth/gate';
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -14,7 +15,8 @@ export async function middleware(request: NextRequest) {
   const gatePw = process.env.APP_PASSWORD;
   if (gatePw) {
     const isPublic = path.startsWith('/login');
-    const authed = request.cookies.get('jasa_gate')?.value === gatePw;
+    const token = request.cookies.get(GATE_COOKIE)?.value ?? '';
+    const authed = token !== '' && safeEqual(token, await gateToken(gatePw));
     if (!authed && !isPublic) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';

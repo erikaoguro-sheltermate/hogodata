@@ -101,7 +101,7 @@ export function Sidebar({ role, displayName, mode, unreadCount, reviewCount = 0 
 
   const footer = (
     <div className="border-t border-slate-200 p-3">
-      {mode !== 'supabase' && (
+      {mode === 'demo' && (
         <>
           <div className="px-2 pb-2 text-[11px] text-slate-400">表示ロール（デモ切替）</div>
           <div className="flex gap-1">
@@ -122,7 +122,7 @@ export function Sidebar({ role, displayName, mode, unreadCount, reviewCount = 0 
       )}
       <div className="mt-2 px-2 text-xs text-slate-500">
         {displayName}
-        {mode === 'supabase' && <span className="ml-1 text-slate-400">（{ROLE_LABEL[role]}）</span>}
+        {mode !== 'demo' && <span className="ml-1 text-slate-400">（{ROLE_LABEL[role]}）</span>}
       </div>
       {mode !== 'demo' && (
         <form action={logout} className="mt-2">

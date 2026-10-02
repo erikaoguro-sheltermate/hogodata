@@ -3,12 +3,12 @@ import { notFound } from 'next/navigation';
 import { getReport, listOrganizations, getOrganization } from '@/lib/data/repo';
 import { requireRole } from '@/lib/auth/session';
 import { canViewReport } from '@/lib/auth/policy';
-import { SPECIES_LABEL, STATUS_LABEL } from '@/lib/masters';
+import { SPECIES_LABEL } from '@/lib/masters';
 import { ymLabel, formatDate } from '@/lib/format';
 import { isReturned, wasResubmitted } from '@/lib/submissions';
-import { Badge } from '@/components/ui';
 import { ReportForm } from '../ReportForm';
 import { ReportActions } from './ReportActions';
+import { ReportStatusBadge } from '@/components/ReportStatusBadge';
 
 export default async function EditReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,9 +28,7 @@ export default async function EditReportPage({ params }: { params: Promise<{ id:
           </Link>
           <h1 className="mt-1 flex flex-wrap items-center gap-2 text-2xl font-bold text-slate-800">
             {org?.name} — {ymLabel(report.year, report.month)} {SPECIES_LABEL[report.species]}
-            <Badge color={report.status === 'CONFIRMED' ? 'green' : report.status === 'SUBMITTED' ? 'blue' : 'slate'}>
-              {STATUS_LABEL[report.status]}
-            </Badge>
+            <ReportStatusBadge report={report} />
           </h1>
         </div>
         <ReportActions id={report.id} status={report.status} role={session.role} />

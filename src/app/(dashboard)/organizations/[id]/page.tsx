@@ -2,11 +2,12 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getOrganization, listReports } from '@/lib/data/repo';
 import { requireRole } from '@/lib/auth/session';
+import { ReportStatusBadge } from '@/components/ReportStatusBadge';
 import { summarize, summarizeByPeriod } from '@/lib/data/analytics';
 import { Card, CardBody, Badge, StatCard, buttonClass, SectionTitle } from '@/components/ui';
-import { prefectureByCode, STATUS_LABEL, ANIMAL_KIND_LABEL } from '@/lib/masters';
+import { prefectureByCode, ANIMAL_KIND_LABEL } from '@/lib/masters';
 import { formatDate, formatNumber } from '@/lib/format';
-import type { MonthlyReport, Species, ReportStatus } from '@/lib/types';
+import type { MonthlyReport, Species } from '@/lib/types';
 
 // パイロット年度（2026年4月〜2027年3月）の対象月
 const FISCAL_MONTHS: { year: number; month: number }[] = [
@@ -27,14 +28,13 @@ function StatusCell({ report, href }: { report: MonthlyReport | undefined; href:
   if (!report) {
     return (
       <Link href={href} className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-100">
-        未提出 <span className="text-amber-400">＋</span>
+        未入力 <span className="text-amber-400">＋</span>
       </Link>
     );
   }
-  const color: Record<ReportStatus, 'slate' | 'blue' | 'green'> = { DRAFT: 'slate', SUBMITTED: 'blue', CONFIRMED: 'green' };
   return (
     <Link href={`/reports/${report.id}`} className="inline-block hover:opacity-80">
-      <Badge color={color[report.status]}>{STATUS_LABEL[report.status]}</Badge>
+      <ReportStatusBadge report={report} />
     </Link>
   );
 }

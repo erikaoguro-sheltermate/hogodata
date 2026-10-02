@@ -1,4 +1,5 @@
 // 表示用フォーマッタ
+import { jstDateString } from './jst';
 
 export function formatNumber(n: number | null | undefined): string {
   if (n === null || n === undefined) return '—';
@@ -13,7 +14,8 @@ export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+  // 日本時間で表示（サーバーの時刻帯に依存しない）
+  return jstDateString(d).replace(/-/g, '/');
 }
 
 /** 生存転帰率（%）。全転帰0なら null。 */

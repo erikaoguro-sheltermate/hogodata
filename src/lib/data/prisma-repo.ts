@@ -166,7 +166,7 @@ export async function listReports(filter: ReportFilter = {}): Promise<MonthlyRep
       ...(prefWhere ? { organization: prefWhere } : {}),
     },
     include: REPORT_INCLUDE,
-    orderBy: [{ year: 'desc' }, { month: 'desc' }],
+    orderBy: [{ year: 'desc' }, { month: 'desc' }, { organization: { name: 'asc' } }],
   });
   return rows.map(toAppReport);
 }
@@ -196,7 +196,6 @@ export async function saveReport(input: ReportInput, id: string | undefined, ent
     endingCount: input.endingCount,
     endingFosterCount: input.endingFosterCount,
     note: input.note ?? null,
-    enteredById,
   };
   const intakeCreate = input.intakeEntries.map((e) => ({
     intakeCategory: { connect: { code: e.intakeCategoryCode } },
@@ -235,6 +234,7 @@ export async function saveReport(input: ReportInput, id: string | undefined, ent
       data: {
         organization: { connect: { id: input.organizationId } },
         ...header,
+        enteredById,
         status: 'DRAFT',
         intakeEntries: { create: intakeCreate },
         outcomeEntries: { create: outcomeCreate },
@@ -322,7 +322,16 @@ export async function upsertProfile(p: Omit<UserProfile, 'createdAt'>): Promise<
 
 export async function recordAudit(e: Omit<AuditEntry, 'id' | 'createdAt' | 'actorName'>): Promise<void> {
   // actor は Profile への外部キー。Profile の無い操作者（共有パスワード運用など）は記録しない。
-  const actor = await prisma.profile.findUnique({ where: { id: e.actorId }, select: { id: true } });
+  let actor = await prisma.profile.findUnique({ where: { id: e.actorId }, select: { id: true } });
+  if (!actor && e.actorId === 'gate-admin') {
+    // 共有パスワード運用中の事務局操作。ログイン導入前でも履歴を残す。
+    actor = await prisma.profile.upsert({
+      where: { id: 'gate-admin' },
+      update: {},
+      create: { id: 'gate-admin', email: 'shared-password@local.invalid', displayName: '事務局（共有パスワード）', role: 'ADMIN' },
+      select: { id: true },
+    });
+  }
   if (!actor) return;
   await prisma.auditLog.create({
     data: {

@@ -3,8 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient, isSupabaseConfigured } from '@/lib/supabase/server';
-
-const GATE_COOKIE = 'jasa_gate';
+import { GATE_COOKIE, gateToken, safeEqual } from '@/lib/auth/gate';
 
 /** メール＋パスワードでログイン（Supabase Auth） */
 export async function passwordLogin(formData: FormData) {
@@ -25,9 +24,9 @@ export async function passwordLogin(formData: FormData) {
 export async function gateLogin(formData: FormData) {
   const pw = String(formData.get('password') ?? '');
   const expected = process.env.APP_PASSWORD;
-  if (expected && pw === expected) {
+  if (expected && safeEqual(pw, expected)) {
     const c = await cookies();
-    c.set(GATE_COOKIE, pw, {
+    c.set(GATE_COOKIE, await gateToken(expected), {
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',

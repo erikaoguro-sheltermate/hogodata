@@ -323,17 +323,28 @@ export function _findReport(organizationId: string, species: Species, year: numb
   );
 }
 
+/** クライアントから来た JSON のうち ReportInput の項目だけを取り出す（status 等の混入を防ぐ） */
+function pickInput(input: ReportInput): ReportInput {
+  return {
+    organizationId: input.organizationId, species: input.species, year: input.year, month: input.month,
+    periodStart: input.periodStart, periodEnd: input.periodEnd,
+    beginningCount: input.beginningCount, beginningFosterCount: input.beginningFosterCount,
+    endingCount: input.endingCount, endingFosterCount: input.endingFosterCount,
+    note: input.note, intakeEntries: input.intakeEntries, outcomeEntries: input.outcomeEntries, tnr: input.tnr,
+  };
+}
+
 export function _saveReport(input: ReportInput, id: string | undefined, enteredById: string): MonthlyReport {
   const reports = db().reports;
   if (id) {
     const existing = reports.find((r) => r.id === id);
     if (existing) {
-      Object.assign(existing, input, { updatedAt: nowIso() });
+      Object.assign(existing, pickInput(input), { updatedAt: nowIso() });
       return existing;
     }
   }
   const report: MonthlyReport = {
-    ...input,
+    ...pickInput(input),
     id: `rep_${crypto.randomUUID().slice(0, 8)}`,
     status: 'DRAFT',
     submittedAt: null,

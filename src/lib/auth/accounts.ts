@@ -25,7 +25,9 @@ export function accountsManagedBySupabase(): boolean {
 
 /** 管理操作が可能か（Supabase 利用時は service_role キーが必要） */
 export function accountAdminReady(): boolean {
-  return !isSupabaseConfigured() || isSupabaseAdminConfigured();
+  if (isSupabaseConfigured()) return isSupabaseAdminConfigured();
+  // 共有パスワード運用中はログインアカウントを作れない（Supabase 導入後に有効化）
+  return !process.env.APP_PASSWORD;
 }
 
 /** ログインアカウントを作成し、その id を返す。メールは確認済みとして作成する。 */

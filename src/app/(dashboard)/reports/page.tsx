@@ -4,9 +4,11 @@ import { listOrganizations, listReports, type ReportFilter } from '@/lib/data/re
 import { checkBalance } from '@/lib/validation/balance';
 import { requireRole } from '@/lib/auth/session';
 import { ReportTabs } from './ReportTabs';
+import { ReportStatusBadge } from '@/components/ReportStatusBadge';
+import { isReturned } from '@/lib/submissions';
 import { scopeReportFilter } from '@/lib/auth/policy';
 import { Card, CardBody, Badge, buttonClass } from '@/components/ui';
-import { SPECIES_LABEL, STATUS_LABEL } from '@/lib/masters';
+import { SPECIES_LABEL } from '@/lib/masters';
 import { ymLabel, formatNumber } from '@/lib/format';
 import type { Species, ReportStatus } from '@/lib/types';
 
@@ -24,11 +26,12 @@ export default async function ReportsPage({
     year: sp.year ? Number(sp.year) : undefined,
     month: sp.month ? Number(sp.month) : undefined,
     species: (sp.species as Species) || undefined,
-    status: (sp.status as ReportStatus) || undefined,
+    status: sp.status === 'RETURNED' ? 'DRAFT' : (sp.status as ReportStatus) || undefined,
     organizationId: sp.org || undefined,
   });
 
-  const [allOrgs, reports] = await Promise.all([listOrganizations(), listReports(filter)]);
+  const [allOrgs, fetched] = await Promise.all([listOrganizations(), listReports(filter)]);
+  const reports = sp.status === 'RETURNED' ? fetched.filter(isReturned) : fetched;
   const orgs = isOrgUser ? allOrgs.filter((o) => o.id === session.organizationId) : allOrgs;
 
   return (
@@ -69,6 +72,7 @@ export default async function ReportsPage({
         <select name="status" defaultValue={sp.status ?? ''} className={inputCls}>
           <option value="">状態（すべて）</option>
           <option value="DRAFT">下書き</option>
+          <option value="RETURNED">差し戻し</option>
           <option value="SUBMITTED">提出済み</option>
           <option value="CONFIRMED">確定</option>
         </select>
@@ -117,9 +121,7 @@ export default async function ReportsPage({
                         : <Badge color="amber">差分 {bal.delta > 0 ? '+' : ''}{bal.delta}</Badge>}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge color={r.status === 'CONFIRMED' ? 'green' : r.status === 'SUBMITTED' ? 'blue' : 'slate'}>
-                        {STATUS_LABEL[r.status]}
-                      </Badge>
+                      <ReportStatusBadge report={r} />
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link href={`/reports/${r.id}`} className="text-sm font-medium text-emerald-700 hover:underline">

@@ -82,8 +82,10 @@ describe('年度ヘルパー', () => {
     expect(inFiscalPeriod({ year: 2026, month: 3 }, 2026)).toBe(false);
   });
   it('1 月の「先月」は前年 12 月', () => {
-    expect(previousYearMonth(new Date(2027, 0, 5))).toEqual({ year: 2026, month: 12 });
-    expect(previousYearMonth(new Date(2026, 9, 2))).toEqual({ year: 2026, month: 9 });
+    expect(previousYearMonth(new Date('2027-01-05T03:00:00Z'))).toEqual({ year: 2026, month: 12 });
+    expect(previousYearMonth(new Date('2026-10-02T03:00:00Z'))).toEqual({ year: 2026, month: 9 });
+    // 10/31 16:30 UTC = 11/1 01:30 JST → 先月は 10 月（UTC のままだと 9 月になる）
+    expect(previousYearMonth(new Date('2026-10-31T16:30:00Z'))).toEqual({ year: 2026, month: 10 });
   });
 });
 
@@ -93,14 +95,16 @@ import type { MonthlyReport } from '@/lib/types';
 
 describe('提出期限', () => {
   it('対象月の翌月 N 日が期限', () => {
-    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 3)).date).toBe('2026-10-10');
-    expect(deadlineFor(2026, 12, 10, new Date(2027, 0, 1)).date).toBe('2027-01-10');
+    expect(deadlineFor(2026, 9, 10, new Date('2026-10-03T03:00:00Z')).date).toBe('2026-10-10');
+    expect(deadlineFor(2026, 12, 10, new Date('2027-01-01T03:00:00Z')).date).toBe('2027-01-10');
   });
   it('残り日数と状態', () => {
-    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 3))).toMatchObject({ daysLeft: 7, state: 'open' });
-    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 8))).toMatchObject({ daysLeft: 2, state: 'soon' });
-    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 10))).toMatchObject({ daysLeft: 0, state: 'soon' });
-    expect(deadlineFor(2026, 9, 10, new Date(2026, 9, 11))).toMatchObject({ daysLeft: -1, state: 'overdue' });
+    expect(deadlineFor(2026, 9, 10, new Date('2026-10-03T03:00:00Z'))).toMatchObject({ daysLeft: 7, state: 'open' });
+    expect(deadlineFor(2026, 9, 10, new Date('2026-10-08T03:00:00Z'))).toMatchObject({ daysLeft: 2, state: 'soon' });
+    expect(deadlineFor(2026, 9, 10, new Date('2026-10-10T03:00:00Z'))).toMatchObject({ daysLeft: 0, state: 'soon' });
+    expect(deadlineFor(2026, 9, 10, new Date('2026-10-11T03:00:00Z'))).toMatchObject({ daysLeft: -1, state: 'overdue' });
+    // 10/10 15:30 UTC = 10/11 00:30 JST → もう期限切れ
+    expect(deadlineFor(2026, 9, 10, new Date('2026-10-10T15:30:00Z'))).toMatchObject({ daysLeft: -1, state: 'overdue' });
   });
 });
 

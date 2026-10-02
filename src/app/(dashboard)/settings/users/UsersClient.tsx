@@ -186,7 +186,7 @@ export function UsersClient({ users, orgs, status, selfId, ready }: Props) {
     <div>
       {!ready && (
         <p className="mb-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          サーバーに <code>SUPABASE_SERVICE_ROLE_KEY</code> が設定されていないため、ユーザーの追加・パスワード再発行・停止はできません。
+          ログイン（Supabase Auth）がまだ有効になっていないか、サーバーに <code>SUPABASE_SERVICE_ROLE_KEY</code> が設定されていないため、ユーザーの追加・パスワード再発行・停止はできません。
         </p>
       )}
 

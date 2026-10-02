@@ -55,8 +55,19 @@ export function validateReport(input: ReportInput, opts: ValidateOptions = {}): 
   if (!Number.isInteger(input.month) || input.month < 1 || input.month > 12) {
     add('V-02', 'error', '対象月は 1〜12 で入力してください。', 'month');
   }
-  if (input.periodStart && input.periodEnd && input.periodStart > input.periodEnd) {
-    add('V-02', 'error', '記録開始日は終了日より前にしてください。', 'periodEnd');
+  const ymd = /^\d{4}-\d{2}-\d{2}$/;
+  const validDate = (s: string) => ymd.test(s) && !Number.isNaN(new Date(s).getTime());
+  if (!validDate(input.periodStart)) add('V-02', 'error', '記録開始日を入力してください。', 'periodStart');
+  if (!validDate(input.periodEnd)) add('V-02', 'error', '記録終了日を入力してください。', 'periodEnd');
+  if (validDate(input.periodStart) && validDate(input.periodEnd)) {
+    if (input.periodStart > input.periodEnd) {
+      add('V-02', 'error', '記録開始日は終了日より前にしてください。', 'periodEnd');
+    }
+    // 記録期間は対象月の中に収める
+    const ym = `${input.year}-${String(input.month).padStart(2, '0')}`;
+    if (!input.periodStart.startsWith(ym) || !input.periodEnd.startsWith(ym)) {
+      add('V-02', 'error', `記録開始日・終了日は対象月（${input.year}年${input.month}月）の中の日付にしてください。`, 'periodStart');
+    }
   }
 
   // V-05 / V-08: 種別とカテゴリーの整合（猫専用カテゴリーを犬で使わない）

@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import { ReportStatusBadge } from '@/components/ReportStatusBadge';
 import { listOrganizations, listReports, getSettings, countAwaitingReview } from '@/lib/data/repo';
 import { previousYearMonth } from '@/lib/data/analytics';
 import { orgMonthStatus } from '@/lib/submissions';
 import { deadlineFor, formatDeadline } from '@/lib/deadline';
 import { summarize } from '@/lib/data/analytics';
-import { Card, CardBody, StatCard, Badge, buttonClass, SectionTitle } from '@/components/ui';
+import { Card, CardBody, StatCard, buttonClass, SectionTitle } from '@/components/ui';
 import { SPECIES_LABEL, prefectureByCode } from '@/lib/masters';
 import { ymLabel, formatNumber } from '@/lib/format';
 import { redirect } from 'next/navigation';
@@ -77,9 +78,7 @@ export default async function DashboardPage() {
                         <td className="px-4 py-3 text-slate-500">{prefectureByCode(org?.prefectureCode ?? '')?.name ?? '—'}</td>
                         <td className="px-4 py-3 text-slate-600">{SPECIES_LABEL[r.species]}</td>
                         <td className="px-4 py-3">
-                          {r.status === 'DRAFT' && <Badge color="slate">下書き</Badge>}
-                          {r.status === 'SUBMITTED' && <Badge color="blue">提出済み</Badge>}
-                          {r.status === 'CONFIRMED' && <Badge color="green">確定</Badge>}
+                          <ReportStatusBadge report={r} />
                         </td>
                       </tr>
                     );

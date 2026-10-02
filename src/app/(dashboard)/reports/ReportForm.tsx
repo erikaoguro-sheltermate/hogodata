@@ -1,6 +1,7 @@
 'use client';
 
 import { yearOptions } from '@/lib/submissions';
+import { previousYearMonth } from '@/lib/data/analytics';
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -32,12 +33,6 @@ function firstDayIso(year: number, month: number): string {
   return `${year}-${String(month).padStart(2, '0')}-01`;
 }
 
-function previousMonth(): { year: number; month: number } {
-  const now = new Date();
-  const m = now.getMonth(); // 0-11（= 先月の 1-12）
-  return m === 0 ? { year: now.getFullYear() - 1, month: 12 } : { year: now.getFullYear(), month: m };
-}
-
 export function ReportForm({
   orgs, role, sessionOrgId, initial, defaultOrgId, defaultSpecies, defaultYear, defaultMonth,
 }: {
@@ -53,7 +48,7 @@ export function ReportForm({
   const router = useRouter();
   const isOrgUser = role === 'ORG_USER';
   // 既定は「先月」分（月初に前月分を入力する運用）
-  const prev = previousMonth();
+  const prev = previousYearMonth();
   const initYear = initial?.year ?? defaultYear ?? prev.year;
   const initMonth = initial?.month ?? defaultMonth ?? prev.month;
 
@@ -183,6 +178,9 @@ export function ReportForm({
       } else {
         setServerMsg({ ok: false, text: res.errors.map((e) => e.message).join(' / ') || '保存できませんでした。' });
       }
+    } catch (err) {
+      console.error(err);
+      setServerMsg({ ok: false, text: '保存できませんでした。通信状態を確認して、もう一度お試しください。' });
     } finally {
       setSaving(false);
     }
@@ -197,7 +195,7 @@ export function ReportForm({
           <CardBody>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
               <Field label="団体" required>
-                <Select value={orgId} disabled={isOrgUser || !canEdit} onChange={(e) => setOrgId(e.target.value)}>
+                <Select value={orgId} disabled={isOrgUser || !canEdit || !!initial} onChange={(e) => setOrgId(e.target.value)}>
                   {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </Select>
               </Field>
@@ -220,10 +218,10 @@ export function ReportForm({
                 </Field>
               </div>
               <Field label="記録開始日" required>
-                <Input type="date" value={periodStart} disabled={!canEdit} onChange={(e) => setPeriodStart(e.target.value)} />
+                <Input type="date" required value={periodStart} disabled={!canEdit} onChange={(e) => setPeriodStart(e.target.value)} />
               </Field>
               <Field label="記録終了日" required>
-                <Input type="date" value={periodEnd} disabled={!canEdit} onChange={(e) => setPeriodEnd(e.target.value)} />
+                <Input type="date" required value={periodEnd} disabled={!canEdit} onChange={(e) => setPeriodEnd(e.target.value)} />
               </Field>
             </div>
           </CardBody>

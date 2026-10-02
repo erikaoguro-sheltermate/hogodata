@@ -2,6 +2,7 @@
 // 対象月の翌月 deadlineDay 日が期限。例：9月分 → 10月10日。
 
 import type { PortalSettings } from './types';
+import { jstYmd } from './jst';
 
 export const DEFAULT_SETTINGS: PortalSettings = {
   deadlineDay: 10,
@@ -28,7 +29,8 @@ export function deadlineFor(year: number, month: number, deadlineDay: number, to
   const nm = month === 12 ? 1 : month + 1;
   const day = Math.min(Math.max(1, Math.trunc(deadlineDay) || 10), 28);
   const due = Date.UTC(ny, nm - 1, day);
-  const t = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  const j = jstYmd(today); // 日本時間の今日
+  const t = Date.UTC(j.year, j.month - 1, j.day);
   const daysLeft = Math.round((due - t) / 86_400_000);
   return {
     date: ymd(ny, nm, day),

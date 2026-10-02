@@ -11,6 +11,7 @@ import { SPECIES_LABEL, prefectureByCode } from '@/lib/masters';
 import { ymLabel } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { RemindPanel } from './RemindPanel';
+import { ReportStatusBadge } from '@/components/ReportStatusBadge';
 
 const SLOT: Record<SlotState, { label: string; color: 'slate' | 'blue' | 'green' | 'amber' }> = {
   none: { label: '未入力', color: 'amber' },
@@ -155,7 +156,9 @@ function MonthView({ orgs, reports, year, month, deadlineDay, onlyMissing, nav }
                     const href = slot.report ? `/reports/${slot.report.id}` : `/reports/new?org=${org.id}&species=${s}&year=${year}&month=${month}`;
                     return (
                       <td key={s} className="px-4 py-3">
-                        <Link href={href} className="hover:opacity-80"><Badge color={meta.color}>{meta.label}</Badge></Link>
+                        <Link href={href} className="hover:opacity-80">
+                          {slot.report ? <ReportStatusBadge report={slot.report} /> : <Badge color={meta.color}>{meta.label}</Badge>}
+                        </Link>
                       </td>
                     );
                   })}

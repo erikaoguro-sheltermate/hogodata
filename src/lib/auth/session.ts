@@ -56,8 +56,16 @@ async function getDemoSession(): Promise<Session> {
 
 const NO_ACCESS = { role: 'VIEWER' as Role, organizationId: null, hasAccess: false };
 
+/** 共有パスワードで入った人の固定セッション（事務局）。監査ログもこの id で残す。 */
+export const GATE_ADMIN_ID = 'gate-admin';
+
 export async function getSession(): Promise<Session> {
-  if (authMode() !== 'supabase') return getDemoSession();
+  const mode = authMode();
+  if (mode === 'demo') return getDemoSession();
+  if (mode === 'gate') {
+    // 共有パスワード運用中はロール切替なし・全員が事務局。cookie のロールは読まない。
+    return { userId: GATE_ADMIN_ID, email: null, displayName: '事務局（共有パスワード）', role: 'ADMIN', organizationId: null, hasAccess: true };
+  }
 
   // 本番：Supabase Auth + Profile（ロール・所属団体）
   const supabase = await createSupabaseServerClient();

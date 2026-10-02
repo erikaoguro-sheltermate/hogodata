@@ -2,6 +2,7 @@
 // 団体個別値は出さず、フィルタされたレポート群を匿名集計する。
 
 import type { MonthlyReport } from '../types';
+import { jstYmd } from '../jst';
 import { INTAKE_CATEGORIES, OUTCOME_CATEGORIES, outcomeCategory } from '../masters';
 import { sumIntake, sumOutcome } from '../validation/balance';
 import { ymLabel, liveReleaseRate } from '../format';
@@ -255,8 +256,8 @@ export function inFiscalPeriod(r: Pick<MonthlyReport, 'year' | 'month'>, fy: num
 
 /** 入力対象となる「先月」（月初に前月分を入力する運用） */
 export function previousYearMonth(now: Date = new Date()): YearMonth {
-  const m = now.getMonth(); // 0-11 = 先月の 1-12
-  return m === 0 ? { year: now.getFullYear() - 1, month: 12 } : { year: now.getFullYear(), month: m };
+  const { year, month } = jstYmd(now); // 日本時間で判定
+  return month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
 }
 
 /** a が b より後の月か */
