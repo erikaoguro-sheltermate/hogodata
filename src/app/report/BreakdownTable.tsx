@@ -9,9 +9,9 @@ export function BreakdownTable({ title, rows, th, td, tdR }: {
   return (
     <section>
       <h2 className="mb-2 text-base font-bold text-slate-700">{title}</h2>
-      <table className="w-full border-collapse">
+      <div className="overflow-x-auto"><table className="w-full min-w-[22rem] border-collapse">
         <thead><tr>
-          <th className={`${th} text-left`}>区分</th><th className={th}>〜5ヶ月</th><th className={th}>5ヶ月〜10歳</th><th className={th}>10歳〜</th><th className={th}>計</th>
+          <th className={`${th} text-left`}>区分</th><th className={`${th} whitespace-nowrap`}>〜5ヶ月</th><th className={`${th} whitespace-nowrap`}>5ヶ月〜10歳</th><th className={`${th} whitespace-nowrap`}>10歳〜</th><th className={`${th} whitespace-nowrap`}>計</th>
         </tr></thead>
         <tbody>
           {rows.length === 0 && <tr><td className={`${td} text-center text-slate-400`} colSpan={5}>データなし</td></tr>}
@@ -25,7 +25,7 @@ export function BreakdownTable({ title, rows, th, td, tdR }: {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </section>
   );
 }

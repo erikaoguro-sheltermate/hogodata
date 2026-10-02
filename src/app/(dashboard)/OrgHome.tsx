@@ -163,8 +163,8 @@ export async function OrgHome({ session }: { session: Session }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-                  <th className="px-4 py-3 font-medium">対象月</th>
-                  {species.map((s) => <th key={s} className="px-4 py-3 font-medium">{SPECIES_ICON[s]} {SPECIES_LABEL[s]}</th>)}
+                  <th className="whitespace-nowrap px-3 py-3 font-medium md:px-4">対象月</th>
+                  {species.map((s) => <th key={s} className="whitespace-nowrap px-3 py-3 font-medium md:px-4">{SPECIES_ICON[s]} {SPECIES_LABEL[s]}</th>)}
                 </tr>
               </thead>
               <tbody>
@@ -172,11 +172,11 @@ export async function OrgHome({ session }: { session: Session }) {
                   const future = isAfter(fm, due) || !isParticipating(org ?? {}, fm.year, fm.month);
                   return (
                     <tr key={`${fm.year}-${fm.month}`} className="border-b border-slate-100 last:border-0">
-                      <td className={future ? 'px-4 py-2.5 text-slate-300' : 'px-4 py-2.5 font-medium text-slate-700'}>{ymLabel(fm.year, fm.month)}</td>
+                      <td className={future ? 'whitespace-nowrap px-3 py-2.5 text-slate-300 md:px-4' : 'whitespace-nowrap px-3 py-2.5 font-medium text-slate-700 md:px-4'}>{ymLabel(fm.year, fm.month)}</td>
                       {species.map((s) => {
                         const r = find(s, fm.year, fm.month);
                         return (
-                          <td key={s} className="px-4 py-2.5">
+                          <td key={s} className="whitespace-nowrap px-3 py-2.5 md:px-4">
                             {r ? (
                               <Link href={`/reports/${r.id}`} className="inline-block hover:opacity-80">
                                 {isReturned(r) ? <Badge color="red">差し戻し</Badge> : <Badge color={STATUS_COLOR[r.status]}>{STATUS_LABEL[r.status]}</Badge>}

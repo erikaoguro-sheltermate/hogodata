@@ -34,7 +34,7 @@ export default async function OrgReportPage({
   ]);
   const href = (y: number, quarter?: number) => `/org-report/${orgId}?fy=${y}${quarter ? `&q=${quarter}` : ''}`;
   const seg = (active: boolean) => cn(
-    'flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-center text-sm transition-colors',
+    'whitespace-nowrap rounded-lg px-2 py-2 text-center text-sm transition-colors sm:flex-1 sm:px-3',
     active ? 'bg-white font-semibold text-emerald-800 shadow-sm ring-1 ring-emerald-200' : 'text-slate-600 hover:bg-white/70',
   );
 
@@ -46,7 +46,7 @@ export default async function OrgReportPage({
         <ReportTabs current="summary" orgId={orgId} />
       </div>
     )}
-    <div className="mx-auto max-w-4xl rounded-2xl bg-white px-8 py-8 text-slate-800 shadow-sm print:rounded-none print:px-0 print:py-0 print:shadow-none">
+    <div className="mx-auto max-w-4xl rounded-2xl bg-white px-4 py-6 text-slate-800 shadow-sm md:px-8 md:py-8 print:rounded-none print:px-0 print:py-0 print:shadow-none">
       <style>{`@media print { .no-print { display: none !important; } @page { margin: 14mm; } body { background: #fff; } }`}</style>
 
       <PrintBar
@@ -59,13 +59,13 @@ export default async function OrgReportPage({
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <span className="text-sm font-medium text-slate-600">表示する期間</span>
           <div className="flex items-center gap-1" role="group" aria-label="年度">
-            <Link href={href(fy - 1, q)} aria-label={`${fy - 1}年度へ`} className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-slate-600 hover:border-emerald-300 hover:text-emerald-700">← 前の年度</Link>
-            <span className="min-w-[5.5rem] text-center text-base font-bold text-slate-800">{fy}年度</span>
-            <Link href={href(fy + 1, q)} aria-label={`${fy + 1}年度へ`} className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-slate-600 hover:border-emerald-300 hover:text-emerald-700">次の年度 →</Link>
+            <Link href={href(fy - 1, q)} aria-label={`${fy - 1}年度へ`} className="whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-1 text-slate-600 hover:border-emerald-300 hover:text-emerald-700">← 前</Link>
+            <span className="min-w-[5.5rem] whitespace-nowrap text-center text-base font-bold text-slate-800">{fy}年度</span>
+            <Link href={href(fy + 1, q)} aria-label={`${fy + 1}年度へ`} className="whitespace-nowrap rounded-lg border border-slate-200 bg-white px-3 py-1 text-slate-600 hover:border-emerald-300 hover:text-emerald-700">次 →</Link>
           </div>
         </div>
-        <div className="flex flex-wrap gap-1 rounded-xl bg-slate-200/60 p-1" role="group" aria-label="範囲">
-          <Link href={href(fy)} aria-current={!q ? 'true' : undefined} className={seg(!q)}>1年間（4月〜翌3月）</Link>
+        <div className="grid grid-cols-4 gap-1 rounded-xl bg-slate-200/60 p-1 sm:flex" role="group" aria-label="範囲">
+          <Link href={href(fy)} aria-current={!q ? 'true' : undefined} className={cn(seg(!q), 'col-span-4 sm:col-span-1')}>1年間（4月〜翌3月）</Link>
           {[1, 2, 3, 4].map((n) => (
             <Link key={n} href={href(fy, n)} aria-current={q === n ? 'true' : undefined} className={seg(q === n)}>{QUARTER_SHORT[n]}</Link>
           ))}

@@ -44,15 +44,15 @@ export function OrgReportBody({ org, orgReports, nationalReports, fy, q }: {
     <>
       {/* ヘッダー */}
       <div className="mb-6 border-b-2 border-emerald-600 pb-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-2xl">🐾</span>
               <span className="text-lg font-bold">どうぶつ保護データプロジェクト</span>
             </div>
-            <h1 className="mt-1 text-2xl font-bold">{org.name} 活動データレポート</h1>
+            <h1 className="mt-1 text-xl font-bold md:text-2xl">{org.name} 活動データレポート</h1>
           </div>
-          <div className="text-right text-sm text-slate-500">
+          <div className="text-sm text-slate-500 sm:text-right">
             <div>作成日：{today}</div>
             <div>{prefectureByCode(org.prefectureCode)?.name ?? ''}</div>
           </div>
@@ -105,7 +105,8 @@ export function OrgReportBody({ org, orgReports, nationalReports, fy, q }: {
           {/* 月別 */}
           <section className="mb-6 break-inside-avoid">
             <h2 className="mb-2 text-base font-bold text-slate-700">月別の数字</h2>
-            <table className="w-full border-collapse">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[28rem] border-collapse">
               <thead><tr>
                 <th className={`${th} text-left`}>月</th>
                 {species.map((s) => (
@@ -115,7 +116,7 @@ export function OrgReportBody({ org, orgReports, nationalReports, fy, q }: {
               <tbody>
                 {months.map((m) => (
                   <tr key={`${m.year}-${m.month}`}>
-                    <td className={td}>{ymLabel(m.year, m.month)}</td>
+                    <td className={`${td} whitespace-nowrap`}>{ymLabel(m.year, m.month)}</td>
                     {species.map((s) => {
                       const r = own.find((x) => x.species === s && x.year === m.year && x.month === m.month);
                       return r ? (
@@ -128,6 +129,7 @@ export function OrgReportBody({ org, orgReports, nationalReports, fy, q }: {
                 ))}
               </tbody>
             </table>
+            </div>
           </section>
 
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 print:grid-cols-2">

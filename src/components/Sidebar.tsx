@@ -153,7 +153,7 @@ export function Sidebar({ role, displayName, mode, unreadCount, reviewCount = 0 
         </button>
       </header>
       {open && (
-        <div className="fixed inset-0 z-20 md:hidden print:hidden" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-40 md:hidden print:hidden" onClick={() => setOpen(false)}>
           <div className="absolute inset-0 bg-slate-900/30" />
           <aside
             id="mobile-menu"

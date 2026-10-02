@@ -20,7 +20,8 @@ const VARIANTS: Record<Variant, string> = {
   ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 border-transparent',
   danger: 'bg-white text-red-600 hover:bg-red-50 border-red-300',
 };
-const SIZES: Record<Size, string> = { sm: 'px-3 py-1.5 text-sm', md: 'px-4 py-2 text-sm' };
+// スマホでは指で押しやすいよう最低 40px の高さにする
+const SIZES: Record<Size, string> = { sm: 'min-h-10 px-3 py-1.5 text-sm md:min-h-0', md: 'min-h-11 px-4 py-2 text-sm md:min-h-0' };
 
 export function buttonClass(variant: Variant = 'primary', size: Size = 'md', className?: string) {
   return cn(

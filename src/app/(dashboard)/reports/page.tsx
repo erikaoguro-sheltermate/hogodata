@@ -55,7 +55,7 @@ export default async function ReportsPage({
       </div>
 
       {/* フィルタ */}
-      <form className="mb-4 flex flex-wrap items-center gap-2" method="get">
+      <form className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center" method="get">
         <select name="year" defaultValue={sp.year ?? ''} className={inputCls}>
           <option value="">年（すべて）</option>
           {yearOptions().map((y) => <option key={y} value={y}>{y}年</option>)}
@@ -82,11 +82,39 @@ export default async function ReportsPage({
             {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
         )}
-        <button type="submit" className={buttonClass('secondary', 'sm')}>絞り込み</button>
-        <Link href="/reports" className={buttonClass('ghost', 'sm')}>クリア</Link>
+        <div className="col-span-2 flex gap-2">
+          <button type="submit" className={buttonClass('secondary', 'sm')}>絞り込み</button>
+          <Link href="/reports" className={buttonClass('ghost', 'sm')}>クリア</Link>
+        </div>
       </form>
 
-      <Card>
+      {/* スマホ：カード */}
+      <div className="space-y-3 md:hidden">
+        {reports.length === 0 && (
+          <Card><CardBody><p className="py-4 text-center text-sm text-slate-400">該当するレポートがありません</p></CardBody></Card>
+        )}
+        {reports.map((r) => {
+          const org = orgs.find((o) => o.id === r.organizationId);
+          const bal = checkBalance(r);
+          return (
+            <Link key={r.id} href={`/reports/${r.id}`} className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm active:bg-slate-50">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-base font-bold text-slate-800">{ymLabel(r.year, r.month)} <span className="font-medium text-slate-600">{SPECIES_LABEL[r.species]}</span></div>
+                <ReportStatusBadge report={r} />
+              </div>
+              {!isOrgUser && <div className="mt-0.5 text-xs text-slate-500">{org?.name ?? '—'}</div>}
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
+                <span>新規収容 <b className="tabular-nums text-slate-800">{formatNumber(bal.intakeTotal)}</b></span>
+                <span>転帰 <b className="tabular-nums text-slate-800">{formatNumber(bal.outcomeTotal)}</b></span>
+                {bal.balanced ? <Badge color="green">収支一致</Badge> : <Badge color="amber">差分 {bal.delta > 0 ? '+' : ''}{bal.delta}</Badge>}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* PC：表 */}
+      <Card className="hidden md:block">
         <CardBody className="overflow-x-auto p-0">
           <table className="w-full text-sm">
             <thead>

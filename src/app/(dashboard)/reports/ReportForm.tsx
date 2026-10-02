@@ -449,51 +449,88 @@ function CategoryMatrix({ section, code, name, requiresRegion, catOnly, getCount
   const regions: Region[] = requiresRegion ? REGION_OPTIONS.map((r) => r.code) : ['NONE'];
   let catTotal = 0;
   for (const region of regions) for (const age of AGE_GROUPS) catTotal += getCount(cellKey(section, code, age.code, region));
+  // 数字が入っている区分だけ最初から開く（ゼロの区分が多いので画面を短く保つ）
+  const [open, setOpen] = React.useState(catTotal > 0);
+  const panelId = `${section}-${code}`;
+
+  const cell = (region: Region, age: (typeof AGE_GROUPS)[number], cls: string) => {
+    const key = cellKey(section, code, age.code, region);
+    const v = getCount(key);
+    return (
+      <input
+        type="number" min={0} inputMode="numeric" disabled={disabled}
+        aria-label={`${name}${requiresRegion ? ` ${REGION_LABEL[region]}` : ''} ${age.name}`}
+        value={v === 0 ? '' : v} placeholder="0"
+        onChange={(e) => setCount(key, parseInt(e.target.value, 10))}
+        className={cn('rounded-md border border-slate-200 text-right tabular-nums outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 disabled:bg-slate-50', cls)}
+      />
+    );
+  };
 
   return (
     <div className="rounded-xl border border-slate-200">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
-        <span className="text-sm font-medium text-slate-700">{name} {catOnly && <Badge color="blue">猫のみ</Badge>}</span>
-        <span className="text-xs text-slate-500">小計 <span className="font-semibold text-slate-700">{formatNumber(catTotal)}</span></span>
-      </div>
-      <div className="overflow-x-auto">
-      <table className="w-full min-w-[22rem] text-sm">
-        <thead>
-          <tr className="text-xs text-slate-400">
-            <th className="px-3 py-1.5 text-left font-medium">{requiresRegion ? '地域' : ''}</th>
-            {AGE_GROUPS.map((a) => <th key={a.code} className="px-2 py-1.5 text-right font-medium">{a.name}</th>)}
-            <th className="px-3 py-1.5 text-right font-medium">合計</th>
-          </tr>
-        </thead>
-        <tbody>
-          {regions.map((region) => {
-            let rowTotal = 0;
-            for (const age of AGE_GROUPS) rowTotal += getCount(cellKey(section, code, age.code, region));
-            return (
-              <tr key={region} className="border-t border-slate-50">
-                <td className="px-3 py-1.5 text-xs text-slate-500">{requiresRegion ? REGION_LABEL[region] : '—'}</td>
-                {AGE_GROUPS.map((age) => {
-                  const key = cellKey(section, code, age.code, region);
-                  const v = getCount(key);
-                  return (
-                    <td key={age.code} className="px-1 py-1">
-                      <input
-                        type="number" min={0} inputMode="numeric" disabled={disabled}
-                        aria-label={`${name}${requiresRegion ? ` ${REGION_LABEL[region]}` : ''} ${age.name}`}
-                        value={v === 0 ? '' : v} placeholder="0"
-                        onChange={(e) => setCount(key, parseInt(e.target.value, 10))}
-                        className="w-full min-w-[3.5rem] rounded-md border border-slate-200 px-2 py-1 text-right text-sm tabular-nums outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 disabled:bg-slate-50"
-                      />
-                    </td>
-                  );
-                })}
-                <td className="px-3 py-1.5 text-right text-sm font-medium tabular-nums text-slate-600">{rowTotal || ''}</td>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className={cn('flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left', open ? 'rounded-t-xl border-b border-slate-100 bg-slate-50' : 'rounded-xl bg-white')}
+      >
+        <span className="text-sm font-medium text-slate-700">
+          <span className="mr-2 inline-block w-3 text-slate-400">{open ? '▾' : '▸'}</span>
+          {name} {catOnly && <Badge color="blue">猫のみ</Badge>}
+        </span>
+        <span className="text-xs text-slate-500">
+          小計 <span className={cn('font-semibold', catTotal > 0 ? 'text-emerald-700' : 'text-slate-700')}>{formatNumber(catTotal)}</span>
+        </span>
+      </button>
+
+      {open && (
+        <div id={panelId}>
+          {/* スマホ：地域ごとに 3 つの欄を縦に並べる */}
+          <div className="space-y-3 px-3 py-3 md:hidden">
+            {regions.map((region) => (
+              <div key={region}>
+                {requiresRegion && <div className="mb-1 text-xs font-medium text-slate-600">{REGION_LABEL[region]}</div>}
+                <div className="grid grid-cols-3 gap-2">
+                  {AGE_GROUPS.map((age) => (
+                    <label key={age.code} className="block">
+                      <span className="mb-0.5 block text-[11px] leading-tight text-slate-500">{age.name}</span>
+                      {cell(region, age, 'w-full px-2 py-2 text-base')}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* PC：表 */}
+          <table className="hidden w-full text-sm md:table">
+            <thead>
+              <tr className="text-xs text-slate-400">
+                <th className="px-3 py-1.5 text-left font-medium">{requiresRegion ? '地域' : ''}</th>
+                {AGE_GROUPS.map((a) => <th key={a.code} className="px-2 py-1.5 text-right font-medium">{a.name}</th>)}
+                <th className="px-3 py-1.5 text-right font-medium">合計</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      </div>
+            </thead>
+            <tbody>
+              {regions.map((region) => {
+                let rowTotal = 0;
+                for (const age of AGE_GROUPS) rowTotal += getCount(cellKey(section, code, age.code, region));
+                return (
+                  <tr key={region} className="border-t border-slate-50">
+                    <td className="whitespace-nowrap px-3 py-1.5 text-xs text-slate-500">{requiresRegion ? REGION_LABEL[region] : '—'}</td>
+                    {AGE_GROUPS.map((age) => (
+                      <td key={age.code} className="px-1 py-1">{cell(region, age, 'w-full min-w-[3.5rem] px-2 py-1 text-sm')}</td>
+                    ))}
+                    <td className="px-3 py-1.5 text-right text-sm font-medium tabular-nums text-slate-600">{rowTotal || ''}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
