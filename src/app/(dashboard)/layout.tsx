@@ -4,10 +4,10 @@ import { requireSession, authMode } from '@/lib/auth/session';
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar role={session.role} displayName={session.displayName} mode={authMode()} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+    <div className="flex h-screen overflow-hidden print:block print:h-auto print:overflow-visible">
+      <Sidebar role={session.role} displayName={session.displayName} mode={authMode()} organizationId={session.organizationId} />
+      <main className="flex-1 overflow-y-auto print:overflow-visible">
+        <div className="mx-auto max-w-6xl px-6 py-8 print:max-w-none print:p-0">{children}</div>
       </main>
     </div>
   );

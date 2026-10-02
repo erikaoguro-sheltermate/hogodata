@@ -13,9 +13,9 @@ import { canViewOrgSummary } from '@/lib/auth/policy';
 import { SPECIES_LABEL, prefectureByCode } from '@/lib/masters';
 import { formatNumber, ymLabel } from '@/lib/format';
 import type { Species } from '@/lib/types';
-import { PrintBar } from '../../report/PrintButton';
-import { BreakdownTable } from '../../report/BreakdownTable';
-import { TrendChart } from '../../(dashboard)/analytics/AnalyticsCharts';
+import { PrintBar } from '../../../report/PrintButton';
+import { BreakdownTable } from '../../../report/BreakdownTable';
+import { TrendChart } from '../../analytics/AnalyticsCharts';
 
 const QUARTER_LABEL: Record<number, string> = { 1: 'Q1（4〜6月）', 2: 'Q2（7〜9月）', 3: 'Q3（10〜12月）', 4: 'Q4（1〜3月）' };
 
@@ -72,12 +72,12 @@ export default async function OrgReportPage({
     active ? 'rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-white' : 'rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 hover:bg-slate-200';
 
   return (
-    <div className="mx-auto max-w-4xl bg-white px-8 py-8 text-slate-800 print:px-0 print:py-0">
+    <div className="mx-auto max-w-4xl rounded-2xl bg-white px-8 py-8 text-slate-800 shadow-sm print:rounded-none print:px-0 print:py-0 print:shadow-none">
       <style>{`@media print { .no-print { display: none !important; } @page { margin: 14mm; } body { background: #fff; } }`}</style>
 
       <PrintBar
-        backHref={session.role === 'ADMIN' ? `/organizations/${orgId}` : '/'}
-        backLabel={session.role === 'ADMIN' ? '団体詳細に戻る' : 'ホームに戻る'}
+        backHref={session.role === 'ADMIN' ? `/organizations/${orgId}` : null}
+        backLabel="団体詳細に戻る"
       />
 
       {/* 期間切替（印刷されない） */}
