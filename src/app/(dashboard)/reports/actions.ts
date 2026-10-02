@@ -7,7 +7,7 @@ import { getSession, isAdmin } from '@/lib/auth/session';
 import { canEditReport, canWriteForOrg } from '@/lib/auth/policy';
 import { SPECIES_LABEL } from '@/lib/masters';
 import { ymLabel } from '@/lib/format';
-import type { MonthlyReport, ReportInput } from '@/lib/types';
+import type { MonthlyReport, ReportInput, Species } from '@/lib/types';
 
 export interface SaveResult {
   ok: boolean;
@@ -108,4 +108,23 @@ export async function deleteReportAction(id: string): Promise<{ ok: boolean; mes
   await recordAudit({ actorId: session.userId, action: 'DELETE', entity: 'MonthlyReport', entityId: id, summary: await label(r) });
   revalidateReports();
   return { ok: true };
+}
+
+export interface PreviousEnding {
+  year: number;
+  month: number;
+  endingCount: number;
+  endingFosterCount: number;
+}
+
+/** 前月の「記録終了時の管理頭数」= 今月の「記録開始時」の候補 */
+export async function getPreviousEndingAction(
+  organizationId: string, species: Species, year: number, month: number,
+): Promise<PreviousEnding | null> {
+  const session = await getSession();
+  if (!session.hasAccess || !canWriteForOrg(session, organizationId)) return null;
+  const prev = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
+  const r = await findReport(organizationId, species, prev.year, prev.month);
+  if (!r) return null;
+  return { ...prev, endingCount: r.endingCount, endingFosterCount: r.endingFosterCount };
 }

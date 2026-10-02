@@ -14,7 +14,7 @@ import type {
 } from '@/lib/types';
 import { Card, CardBody, Button, Badge, Field, Input, Select } from '@/components/ui';
 import { formatNumber } from '@/lib/format';
-import { saveReportAction } from './actions';
+import { saveReportAction, getPreviousEndingAction, type PreviousEnding } from './actions';
 import { cn } from '@/lib/utils';
 
 type SectionKind = 'intake' | 'outcome';
@@ -81,6 +81,44 @@ export function ReportForm({
     initial?.outcomeEntries.forEach((e) => { m[cellKey('outcome', e.outcomeCategoryCode, e.ageGroupCode, e.region)] = e.count; });
     return m;
   });
+
+  // 前月の月末頭数 → 今月の記録開始時（新規入力では自動で入れる。手で直したら上書きしない）
+  const [prevEnding, setPrevEnding] = React.useState<PreviousEnding | null>(null);
+  const beginningTouched = React.useRef(!!initial);
+  const [autoFilled, setAutoFilled] = React.useState(false);
+  React.useEffect(() => {
+    let cancelled = false;
+    if (!orgId) return;
+    getPreviousEndingAction(orgId, species, year, month).then((p) => {
+      if (cancelled) return;
+      setPrevEnding(p);
+      if (!beginningTouched.current) {
+        setBeginningCount(p?.endingCount ?? 0);
+        setBeginningFosterCount(p?.endingFosterCount ?? 0);
+        setAutoFilled(!!p);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [orgId, species, year, month]);
+
+  function editBeginning(total: number) {
+    beginningTouched.current = true;
+    setAutoFilled(false);
+    setBeginningCount(total);
+  }
+  function editBeginningFoster(foster: number) {
+    beginningTouched.current = true;
+    setAutoFilled(false);
+    setBeginningFosterCount(foster);
+  }
+  function applyPrevEnding() {
+    if (!prevEnding) return;
+    setBeginningCount(prevEnding.endingCount);
+    setBeginningFosterCount(prevEnding.endingFosterCount);
+    setAutoFilled(true);
+  }
+  const beginningMismatch = !!prevEnding &&
+    (prevEnding.endingCount !== beginningCount || prevEnding.endingFosterCount !== beginningFosterCount);
 
   const [saving, setSaving] = React.useState(false);
   const [serverMsg, setServerMsg] = React.useState<{ ok: boolean; text: string } | null>(null);
@@ -193,8 +231,21 @@ export function ReportForm({
         <PopulationCard
           title="① 記録開始時の管理頭数"
           total={beginningCount} foster={beginningFosterCount}
-          onTotal={setBeginningCount} onFoster={setBeginningFosterCount} disabled={!canEdit}
+          onTotal={editBeginning} onFoster={editBeginningFoster} disabled={!canEdit}
         />
+        {prevEnding && !beginningMismatch && autoFilled && (
+          <p className="-mt-4 rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
+            ✓ {prevEnding.year}年{prevEnding.month}月の月末の頭数（{formatNumber(prevEnding.endingCount)}頭・うち一時預かり {formatNumber(prevEnding.endingFosterCount)}）を自動で入れました。
+          </p>
+        )}
+        {prevEnding && beginningMismatch && (
+          <div className="-mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
+            <span>
+              {prevEnding.year}年{prevEnding.month}月の月末の頭数は {formatNumber(prevEnding.endingCount)}頭（うち一時預かり {formatNumber(prevEnding.endingFosterCount)}）です。今月の最初と違っています。
+            </span>
+            {canEdit && <Button size="sm" variant="secondary" onClick={applyPrevEnding}>前月の数字にそろえる</Button>}
+          </div>
+        )}
 
         {/* §2 新規収容 */}
         <Card>

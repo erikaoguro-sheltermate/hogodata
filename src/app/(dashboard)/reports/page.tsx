@@ -78,7 +78,7 @@ export default async function ReportsPage({
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
                 <th className="px-4 py-3 font-medium">対象年月</th>
-                <th className="px-4 py-3 font-medium">団体</th>
+                {!isOrgUser && <th className="px-4 py-3 font-medium">団体</th>}
                 <th className="px-4 py-3 font-medium">種別</th>
                 <th className="px-4 py-3 text-right font-medium">収容計</th>
                 <th className="px-4 py-3 text-right font-medium">転帰計</th>
@@ -89,7 +89,7 @@ export default async function ReportsPage({
             </thead>
             <tbody>
               {reports.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">該当するレポートがありません</td></tr>
+                <tr><td colSpan={isOrgUser ? 7 : 8} className="px-4 py-8 text-center text-slate-400">該当するレポートがありません</td></tr>
               )}
               {reports.map((r) => {
                 const org = orgs.find((o) => o.id === r.organizationId);
@@ -97,7 +97,7 @@ export default async function ReportsPage({
                 return (
                   <tr key={r.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                     <td className="px-4 py-3 font-medium text-slate-700">{ymLabel(r.year, r.month)}</td>
-                    <td className="px-4 py-3 text-slate-700">{org?.name ?? '—'}</td>
+                    {!isOrgUser && <td className="px-4 py-3 text-slate-700">{org?.name ?? '—'}</td>}
                     <td className="px-4 py-3 text-slate-600">{SPECIES_LABEL[r.species]}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-slate-700">{formatNumber(bal.intakeTotal)}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-slate-700">{formatNumber(bal.outcomeTotal)}</td>
