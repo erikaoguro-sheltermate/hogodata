@@ -69,6 +69,8 @@ export interface Organization {
   partnerMunicipalities?: string | null;  // 連携している自治体（自由記述）
   hasPartnerOrgs?: boolean | null;        // 連携している民間団体の有無
   activities?: string[];                  // 主な活動内容（複数選択）
+  joinedYear?: number | null;             // プロジェクト参加開始年（この月から報告対象）
+  joinedMonth?: number | null;
 }
 
 // ---- 明細（入力ペイロード） ----
@@ -115,6 +117,11 @@ export interface MonthlyReport extends ReportInput {
   status: ReportStatus;
   submittedAt: string | null;
   enteredById: string | null;
+  /** 差し戻し理由（事務局 → 団体） */
+  returnNote?: string | null;
+  returnedAt?: string | null;
+  /** 提出後に修正・再提出した日時 */
+  resubmittedAt?: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

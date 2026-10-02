@@ -29,7 +29,9 @@ async function main() {
   const normalized = email.trim().toLowerCase();
 
   let userId: string;
-  const created = await supabase.auth.admin.createUser({ email: normalized, password, email_confirm: true });
+  const created = await supabase.auth.admin.createUser({
+    email: normalized, password, email_confirm: true, user_metadata: { must_change_password: true },
+  });
   if (created.data.user) {
     userId = created.data.user.id;
   } else {
@@ -38,7 +40,7 @@ async function main() {
     const existing = data?.users.find((u) => u.email?.toLowerCase() === normalized);
     if (!existing) throw new Error(`アカウントを作成できませんでした: ${created.error?.message}`);
     userId = existing.id;
-    const { error } = await supabase.auth.admin.updateUserById(userId, { password, ban_duration: 'none' });
+    const { error } = await supabase.auth.admin.updateUserById(userId, { password, ban_duration: 'none', user_metadata: { must_change_password: true } });
     if (error) throw new Error(`パスワードを設定できませんでした: ${error.message}`);
   }
 

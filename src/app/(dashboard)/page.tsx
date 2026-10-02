@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { listOrganizations, listReports, getSettings } from '@/lib/data/repo';
+import { listOrganizations, listReports, getSettings, countAwaitingReview } from '@/lib/data/repo';
 import { previousYearMonth } from '@/lib/data/analytics';
 import { orgMonthStatus } from '@/lib/submissions';
 import { deadlineFor, formatDeadline } from '@/lib/deadline';
@@ -18,14 +18,14 @@ export default async function DashboardPage() {
 
   // 対象は「先月分」（団体が今月提出する月）
   const latest = previousYearMonth();
-  const [orgs, monthReports, settings] = await Promise.all([
-    listOrganizations(), listReports({ year: latest.year, month: latest.month }), getSettings(),
+  const [orgs, monthReports, settings, reviewCount] = await Promise.all([
+    listOrganizations(), listReports({ year: latest.year, month: latest.month }), getSettings(), countAwaitingReview(),
   ]);
   const submitted = monthReports.filter((r) => r.status !== 'DRAFT');
   const summary = summarize(submitted);
   const dl = deadlineFor(latest.year, latest.month, settings.deadlineDay);
 
-  const unsubmitted = orgs.filter((o) => o.isActive && orgMonthStatus(o, monthReports, latest.year, latest.month).state !== 'done');
+  const unsubmitted = orgs.filter((o) => o.isActive && !['done', 'na'].includes(orgMonthStatus(o, monthReports, latest.year, latest.month).state));
 
   return (
     <div>
@@ -42,7 +42,9 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="登録団体数" value={formatNumber(orgs.filter((o) => o.isActive).length)} sub="アクティブな団体" />
-        <StatCard label="提出済みレポート" value={formatNumber(submitted.length)} accent="emerald" sub={`下書き ${monthReports.length - submitted.length} 件`} />
+        <Link href="/submissions?view=review" className="block rounded-2xl transition-shadow hover:shadow-md">
+          <StatCard label="確認待ち（全期間）" value={formatNumber(reviewCount)} accent="sky" sub="提出済み・未確定 → 確認する" />
+        </Link>
         <StatCard label="未完了の団体" value={formatNumber(unsubmitted.length)} accent="amber" sub="下書き・片方のみ・未着手" />
         <StatCard label="新規収容（提出分の合計）" value={formatNumber(summary.intakeTotal)} accent="sky" sub={`転帰 ${formatNumber(summary.outcomeTotal)} 頭`} />
       </div>

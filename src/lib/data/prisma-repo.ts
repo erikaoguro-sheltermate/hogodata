@@ -8,7 +8,7 @@ import type {
   UserProfile, AuditEntry, AuditAction, Role, Announcement, PortalSettings,
 } from '../types';
 import { DEFAULT_SETTINGS } from '../deadline';
-import type { ReportFilter } from './store';
+import type { ReportFilter, ReportMetaPatch } from './store';
 
 const REPORT_INCLUDE = {
   intakeEntries: { include: { intakeCategory: true, ageGroup: true } },
@@ -41,6 +41,8 @@ function toAppOrg(o: any): Organization {
     partnerMunicipalities: o.partnerMunicipalities,
     hasPartnerOrgs: o.hasPartnerOrgs,
     activities: o.activities ?? [],
+    joinedYear: o.joinedYear ?? null,
+    joinedMonth: o.joinedMonth ?? null,
   };
 }
 
@@ -83,6 +85,9 @@ function toAppReport(r: any): MonthlyReport {
       : null,
     status: r.status as ReportStatus,
     submittedAt: r.submittedAt ? r.submittedAt.toISOString() : null,
+    returnNote: r.returnNote ?? null,
+    returnedAt: r.returnedAt ? r.returnedAt.toISOString() : null,
+    resubmittedAt: r.resubmittedAt ? r.resubmittedAt.toISOString() : null,
     enteredById: r.enteredById ?? null,
     isActive: r.isActive,
     createdAt: r.createdAt.toISOString(),
@@ -120,6 +125,8 @@ function orgWriteData(data: Partial<Omit<Organization, 'id'>>) {
     partnerMunicipalities: data.partnerMunicipalities ?? null,
     hasPartnerOrgs: data.hasPartnerOrgs ?? null,
     activities: data.activities ?? [],
+    joinedYear: data.joinedYear ?? null,
+    joinedMonth: data.joinedMonth ?? null,
   };
 }
 
@@ -251,6 +258,20 @@ export async function setReportStatus(id: string, status: ReportStatus): Promise
     include: REPORT_INCLUDE,
   });
   return toAppReport(r);
+}
+
+export async function patchReportMeta(id: string, patch: ReportMetaPatch): Promise<void> {
+  const d = (v: string | null | undefined) => (v === undefined ? undefined : v === null ? null : new Date(v));
+  await prisma.monthlyReport.update({
+    where: { id },
+    data: {
+      ...(patch.status !== undefined ? { status: patch.status } : {}),
+      ...(patch.submittedAt !== undefined ? { submittedAt: d(patch.submittedAt) } : {}),
+      ...(patch.returnNote !== undefined ? { returnNote: patch.returnNote } : {}),
+      ...(patch.returnedAt !== undefined ? { returnedAt: d(patch.returnedAt) } : {}),
+      ...(patch.resubmittedAt !== undefined ? { resubmittedAt: d(patch.resubmittedAt) } : {}),
+    },
+  });
 }
 
 export async function deleteReport(id: string): Promise<boolean> {

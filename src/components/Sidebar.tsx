@@ -14,13 +14,13 @@ interface NavItem {
   roles: Role[];
   /** このパスで始まる画面でも選択中にする */
   match?: string[];
-  badge?: 'unread';
+  badge?: 'unread' | 'review';
 }
 
 const NAV: NavItem[] = [
   { href: '/', label: 'ダッシュボード', icon: '🏠', roles: ['ADMIN'] },
   { href: '/', label: 'ホーム', icon: '🏠', roles: ['ORG_USER'] },
-  { href: '/submissions', label: '提出状況', icon: '📋', roles: ['ADMIN'] },
+  { href: '/submissions', label: '提出状況', icon: '📋', roles: ['ADMIN'], badge: 'review', match: ['/org-report/all'] },
   { href: '/reports', label: '月次レポート', icon: '📝', roles: ['ADMIN'] },
   { href: '/reports', label: 'レポート', icon: '📝', roles: ['ORG_USER'], match: ['/org-report'] },
   { href: '/analytics', label: '全国の集計', icon: '📊', roles: ['ADMIN', 'ORG_USER', 'VIEWER'], match: ['/report'] },
@@ -51,8 +51,8 @@ function Brand() {
   );
 }
 
-export function Sidebar({ role, displayName, mode, unreadCount }: {
-  role: Role; displayName: string; mode: 'supabase' | 'gate' | 'demo'; unreadCount: number;
+export function Sidebar({ role, displayName, mode, unreadCount, reviewCount = 0 }: {
+  role: Role; displayName: string; mode: 'supabase' | 'gate' | 'demo'; unreadCount: number; reviewCount?: number;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
@@ -83,6 +83,11 @@ export function Sidebar({ role, displayName, mode, unreadCount }: {
           >
             <span className="text-base">{item.icon}</span>
             <span className="flex-1">{item.label}</span>
+            {item.badge === 'review' && reviewCount > 0 && (
+              <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[11px] font-bold text-white" aria-label={`確認待ち ${reviewCount} 件`}>
+                {reviewCount}
+              </span>
+            )}
             {item.badge === 'unread' && unreadCount > 0 && (
               <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white" aria-label={`未読 ${unreadCount} 件`}>
                 {unreadCount}

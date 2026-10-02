@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { saveReport, setReportStatus, deleteReport, getReport, findReport, getOrganization, recordAudit } from '@/lib/data/repo';
+import { saveReport, setReportStatus, deleteReport, getReport, findReport, getOrganization, recordAudit, patchReportMeta } from '@/lib/data/repo';
 import { validateReport, type ValidationIssue } from '@/lib/validation';
 import { getSession, isAdmin } from '@/lib/auth/session';
 import { canEditReport, canWriteForOrg } from '@/lib/auth/policy';
@@ -67,12 +67,28 @@ export async function saveReportAction(
   const saved = await saveReport(input, id, session.userId);
   const what = await label(saved);
   await recordAudit({ actorId: session.userId, action: id ? 'UPDATE' : 'CREATE', entity: 'MonthlyReport', entityId: saved.id, summary: what });
-  if (submit && saved.status === 'DRAFT') {
-    await setReportStatus(saved.id, 'SUBMITTED');
-    await recordAudit({ actorId: session.userId, action: 'SUBMIT', entity: 'MonthlyReport', entityId: saved.id, summary: what });
+
+  const now = new Date().toISOString();
+  const byOrg = session.role === 'ORG_USER';
+  const wasSubmittedBefore = !!existing?.submittedAt;
+  if (existing?.status === 'SUBMITTED' && byOrg) {
+    // 提出済みを団体が直した＝再提出（事務局の確認待ちに「再提出」と出る）
+    await patchReportMeta(saved.id, { resubmittedAt: now });
+    await recordAudit({ actorId: session.userId, action: 'SUBMIT', entity: 'MonthlyReport', entityId: saved.id, summary: `${what}（修正して再提出）` });
+  } else if (submit && saved.status === 'DRAFT') {
+    await patchReportMeta(saved.id, {
+      status: 'SUBMITTED',
+      submittedAt: now,
+      ...(wasSubmittedBefore ? { resubmittedAt: now } : {}),
+    });
+    await recordAudit({
+      actorId: session.userId, action: 'SUBMIT', entity: 'MonthlyReport', entityId: saved.id,
+      summary: wasSubmittedBefore ? `${what}（差し戻し後の再提出）` : what,
+    });
   }
 
   revalidateReports(saved.id);
+  revalidatePath('/submissions');
   return { ok: true, id: saved.id, errors: [], warnings: result.warnings };
 }
 
@@ -87,15 +103,19 @@ export async function confirmReportAction(id: string): Promise<{ ok: boolean; me
   return { ok: true };
 }
 
-/** 差し戻し：提出済み・確定を下書きに戻し、団体が直せる状態にする（事務局のみ） */
-export async function reopenReportAction(id: string): Promise<{ ok: boolean; message?: string }> {
+/** 差し戻し：理由を添えて下書きに戻し、団体が直せる状態にする（事務局のみ） */
+export async function reopenReportAction(id: string, reason: string): Promise<{ ok: boolean; message?: string }> {
   const session = await getSession();
   if (!session.hasAccess || !isAdmin(session)) return { ok: false, message: '差し戻しは事務局のみ可能です。' };
+  const note = reason.trim();
+  if (!note) return { ok: false, message: '団体に伝える理由を入力してください。' };
+  if (note.length > 500) return { ok: false, message: '理由は 500 文字以内にしてください。' };
   const r = await getReport(id);
   if (!r) return { ok: false, message: 'レポートが見つかりません。' };
-  await setReportStatus(id, 'DRAFT');
-  await recordAudit({ actorId: session.userId, action: 'REOPEN', entity: 'MonthlyReport', entityId: id, summary: await label(r) });
+  await patchReportMeta(id, { status: 'DRAFT', returnNote: note, returnedAt: new Date().toISOString() });
+  await recordAudit({ actorId: session.userId, action: 'REOPEN', entity: 'MonthlyReport', entityId: id, summary: `${await label(r)}：${note.slice(0, 60)}` });
   revalidateReports(id);
+  revalidatePath('/submissions');
   return { ok: true };
 }
 
@@ -127,4 +147,51 @@ export async function getPreviousEndingAction(
   const r = await findReport(organizationId, species, prev.year, prev.month);
   if (!r) return null;
   return { ...prev, endingCount: r.endingCount, endingFosterCount: r.endingFosterCount };
+}
+
+/** まとめて確定（提出済みのものだけ） */
+export async function confirmReportsAction(ids: string[]): Promise<{ ok: boolean; count: number; message?: string }> {
+  const session = await getSession();
+  if (!session.hasAccess || !isAdmin(session)) return { ok: false, count: 0, message: '確定は事務局のみ可能です。' };
+  let count = 0;
+  for (const id of ids.slice(0, 500)) {
+    const r = await getReport(id);
+    if (!r || r.status !== 'SUBMITTED') continue;
+    await setReportStatus(id, 'CONFIRMED');
+    await recordAudit({ actorId: session.userId, action: 'CONFIRM', entity: 'MonthlyReport', entityId: id, summary: await label(r) });
+    count++;
+  }
+  revalidateReports();
+  revalidatePath('/submissions');
+  return { ok: true, count };
+}
+
+/**
+ * 「この月は動きなし」：収容・転帰ゼロ、頭数は前月の月末のまま、として提出する。
+ * 前月の報告がない場合は使えない（頭数がわからないため）。
+ */
+export async function submitNoChangeAction(
+  organizationId: string, species: Species, year: number, month: number,
+): Promise<{ ok: boolean; id?: string; message?: string }> {
+  const session = await getSession();
+  if (!session.hasAccess || !canWriteForOrg(session, organizationId)) return { ok: false, message: '権限がありません。' };
+  if (await findReport(organizationId, species, year, month)) {
+    return { ok: false, message: 'この月のレポートは既にあります。開いて編集してください。' };
+  }
+  const prev = await getPreviousEndingAction(organizationId, species, year, month);
+  if (!prev) return { ok: false, message: '前月の報告がないため使えません。通常の入力から提出してください。' };
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const periodStart = `${year}-${pad(month)}-01`;
+  const periodEnd = `${year}-${pad(month)}-${pad(new Date(year, month, 0).getDate())}`;
+  const input: ReportInput = {
+    organizationId, species, year, month, periodStart, periodEnd,
+    beginningCount: prev.endingCount, beginningFosterCount: prev.endingFosterCount,
+    endingCount: prev.endingCount, endingFosterCount: prev.endingFosterCount,
+    note: 'この月は収容・転帰なし（かんたん提出）',
+    intakeEntries: [], outcomeEntries: [],
+    tnr: species === 'CAT' ? { periodStart, periodEnd, soloCount: 0, collaborativeCount: 0 } : null,
+  };
+  const res = await saveReportAction(input, undefined, true);
+  return res.ok ? { ok: true, id: res.id } : { ok: false, message: res.errors.map((e) => e.message).join(' / ') };
 }

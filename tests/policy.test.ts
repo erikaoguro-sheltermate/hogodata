@@ -123,3 +123,30 @@ describe('提出状況', () => {
     expect(orgMonthStatus({ id: 'o', animalTypes: ['CAT'] }, [rep('CAT', 'SUBMITTED')], 2026, 9).state).toBe('done');
   });
 });
+
+import { isParticipating, isReturned, wasResubmitted, yearOptions } from '@/lib/submissions';
+
+describe('提出フロー', () => {
+  it('参加開始月より前は対象外', () => {
+    const org = { joinedYear: 2026, joinedMonth: 7 };
+    expect(isParticipating(org, 2026, 6)).toBe(false);
+    expect(isParticipating(org, 2026, 7)).toBe(true);
+    expect(isParticipating(org, 2027, 1)).toBe(true);
+    expect(isParticipating({ joinedYear: null, joinedMonth: null }, 2026, 4)).toBe(true);
+  });
+  it('差し戻し中かどうか', () => {
+    const base = { status: 'DRAFT' as const, returnNote: '頭数をご確認ください', returnedAt: '2026-10-05T00:00:00Z' };
+    expect(isReturned({ ...base, resubmittedAt: null })).toBe(true);
+    expect(isReturned({ ...base, resubmittedAt: '2026-10-06T00:00:00Z' })).toBe(false);
+    expect(isReturned({ ...base, status: 'SUBMITTED', resubmittedAt: null })).toBe(false);
+    expect(isReturned({ ...base, returnNote: null, resubmittedAt: null })).toBe(false);
+  });
+  it('再提出の印は提出済みのときだけ', () => {
+    expect(wasResubmitted({ status: 'SUBMITTED', resubmittedAt: '2026-10-06T00:00:00Z' })).toBe(true);
+    expect(wasResubmitted({ status: 'CONFIRMED', resubmittedAt: '2026-10-06T00:00:00Z' })).toBe(false);
+  });
+  it('年の選択肢は今年の翌年まで自動で増える', () => {
+    expect(yearOptions(new Date(2026, 9, 1))).toEqual([2026, 2027]);
+    expect(yearOptions(new Date(2028, 0, 1))).toEqual([2026, 2027, 2028, 2029]);
+  });
+});

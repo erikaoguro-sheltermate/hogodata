@@ -40,6 +40,7 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
       name: o.name, prefectureCode: o.prefectureCode, orgType: o.orgType,
       contactName: o.contactName ?? '', contactEmail: o.contactEmail ?? '', isActive: o.isActive, notes: o.notes ?? '',
       establishedYear: o.establishedYear ?? null, animalHandling: o.animalHandling ?? [], animalTypes: o.animalTypes ?? [],
+      joinedYear: o.joinedYear ?? null, joinedMonth: o.joinedMonth ?? null,
       memberCount: o.memberCount ?? null, volunteerCount: o.volunteerCount ?? null, avgAnimalsManaged: o.avgAnimalsManaged ?? null,
       partnerMunicipalities: o.partnerMunicipalities ?? '', hasPartnerOrgs: o.hasPartnerOrgs ?? null, activities: o.activities ?? [],
     });
@@ -113,6 +114,16 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
                   <option value="1">有効</option>
                   <option value="0">無効</option>
                 </Select>
+              </Field>
+              <Field label="プロジェクト参加開始月" hint="この月から報告の対象になります。空欄なら最初から対象">
+                <Input
+                  type="month"
+                  value={form.joinedYear ? `${form.joinedYear}-${String(form.joinedMonth ?? 1).padStart(2, '0')}` : ''}
+                  onChange={(e) => {
+                    const [y, m] = e.target.value.split('-').map(Number);
+                    setForm({ ...form, joinedYear: y || null, joinedMonth: m || null });
+                  }}
+                />
               </Field>
             </div>
 

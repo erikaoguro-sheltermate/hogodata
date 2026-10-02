@@ -80,3 +80,7 @@ export async function getSettings(): Promise<PortalSettings> {
 export async function saveSettings(s: PortalSettings): Promise<void> {
   store._saveSettings(s);
 }
+
+export async function patchReportMeta(id: string, patch: store.ReportMetaPatch): Promise<void> {
+  store._patchReportMeta(id, patch);
+}

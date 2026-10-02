@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { yearOptions } from '@/lib/submissions';
 import { listReports, getReportNote, type ReportFilter } from '@/lib/data/repo';
 import { summarize, summarizeByPeriod, currentManagedCount, generateInsights, noteKey, type PeriodType } from '@/lib/data/analytics';
 import { requireSession, isAdmin } from '@/lib/auth/session';
@@ -80,7 +81,7 @@ export default async function AnalyticsPage({
         <input type="hidden" name="period" value={period} />
         <select name="year" defaultValue={sp.year ?? ''} className={inputCls}>
           <option value="">年（すべて）</option>
-          {[2026, 2027].map((y) => <option key={y} value={y}>{y}年</option>)}
+          {yearOptions().map((y) => <option key={y} value={y}>{y}年</option>)}
         </select>
         <select name="species" defaultValue={sp.species ?? ''} className={inputCls}>
           <option value="">種別（すべて）</option>

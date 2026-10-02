@@ -75,6 +75,8 @@ model Organization {
   partnerMunicipalities String? // 連携している自治体（自由記述）
   hasPartnerOrgs        Boolean? // 連携している民間団体の有無
   activities            String[] @default([]) // 主な活動内容
+  joinedYear            Int? // プロジェクト参加開始（この月から報告対象）
+  joinedMonth           Int?
 
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
@@ -105,6 +107,9 @@ model MonthlyReport {
   submittedAt DateTime?
   enteredById String? // 代行入力した事務局ユーザー
   note        String?
+  returnNote    String? // 差し戻し理由（事務局 → 団体）
+  returnedAt    DateTime? // 差し戻した日時
+  resubmittedAt DateTime? // 提出後に修正・再提出した日時
   isActive    Boolean      @default(true) // 論理削除
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt

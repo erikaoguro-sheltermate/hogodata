@@ -16,6 +16,8 @@ export interface Session {
   organizationId: string | null;
   /** ログイン済みだが Profile 未登録・停止中など、アプリを使えない状態なら false */
   hasAccess: boolean;
+  /** 事務局が発行した初期パスワードのまま（変更をうながす） */
+  mustChangePassword?: boolean;
 }
 
 /** 認証方式：supabase=メール+パスワード / gate=共有パスワード / demo=ロール切替 */
@@ -77,6 +79,7 @@ export async function getSession(): Promise<Session> {
     role: profile.role,
     organizationId: profile.organizationId,
     hasAccess: !orgUserWithoutOrg,
+    mustChangePassword: user.user_metadata?.must_change_password === true,
   };
 }
 

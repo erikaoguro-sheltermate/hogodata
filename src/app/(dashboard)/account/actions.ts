@@ -3,6 +3,7 @@
 import { requireSession, authMode } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { validateNewPassword } from '@/lib/auth/policy';
+import { revalidatePath } from 'next/cache';
 
 export async function changePasswordAction(current: string, next: string): Promise<{ ok: boolean; message: string }> {
   const session = await requireSession();
@@ -18,7 +19,8 @@ export async function changePasswordAction(current: string, next: string): Promi
   const { error: signInError } = await supabase.auth.signInWithPassword({ email: session.email, password: current });
   if (signInError) return { ok: false, message: '現在のパスワードが正しくありません。' };
 
-  const { error } = await supabase.auth.updateUser({ password: next });
+  const { error } = await supabase.auth.updateUser({ password: next, data: { must_change_password: false } });
   if (error) return { ok: false, message: `変更できませんでした（${error.message}）。` };
+  revalidatePath('/', 'layout');
   return { ok: true, message: 'パスワードを変更しました。次回から新しいパスワードでログインしてください。' };
 }

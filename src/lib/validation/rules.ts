@@ -33,7 +33,7 @@ export interface ValidateOptions {
 const isNonNegInt = (n: number) => Number.isInteger(n) && n >= 0;
 
 export function validateReport(input: ReportInput, opts: ValidateOptions = {}): ValidationResult {
-  const { balanceMode = 'warn', yearRange = [2026, 2027] } = opts;
+  const { balanceMode = 'warn', yearRange = [2026, new Date().getFullYear() + 1] } = opts;
   const issues: ValidationIssue[] = [];
   const add = (rule: string, severity: Severity, message: string, field?: string) =>
     issues.push({ rule, severity, message, field });

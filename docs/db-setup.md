@@ -55,6 +55,10 @@ Supabase の **SQL Editor** で [`prisma/rls.sql`](../prisma/rls.sql) の内容�
 Supabase の SQL Editor で [`prisma/migrations-manual/20261002_portal.sql`](../prisma/migrations-manual/20261002_portal.sql) を実行する
 （追加のみ・既存データに影響なし）。未適用でも画面は動くが、お知らせは空・設定は既定値（翌月10日）になり、保存はできない。
 
+### 提出フローの列追加
+続けて [`prisma/migrations-manual/20261003_submission_flow.sql`](../prisma/migrations-manual/20261003_submission_flow.sql) を実行する
+（差し戻し理由・再提出日時・参加開始月の列を追加するだけ）。**こちらは未適用だとレポートの読み書きが失敗する**ので、デプロイ前に必ず適用する。
+
 ### 団体ユーザーの追加（運用）
 事務局でログイン →「ユーザー」→「＋ ユーザーを追加」→ メール・お名前・権限・所属団体を入力。
 表示された「ログイン情報」をコピーして団体に伝える（初期パスワードは再表示できない）。

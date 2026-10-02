@@ -2,7 +2,8 @@
 import Link from 'next/link';
 import { getOrganization, listReports, getSettings, listAnnouncements, readAnnouncementIds } from '@/lib/data/repo';
 import { deadlineFor, formatDeadline } from '@/lib/deadline';
-import { expectedSpecies } from '@/lib/submissions';
+import { expectedSpecies, isReturned, isParticipating } from '@/lib/submissions';
+import { NoChangeButton } from './NoChangeButton';
 import { formatDate } from '@/lib/format';
 import {
   summarize, currentManagedCount, fiscalYear, fiscalMonths, inFiscalPeriod, previousYearMonth, isAfter,
@@ -21,19 +22,33 @@ function newHref(species: Species, year: number, month: number) {
 }
 
 /** 先月分の 1 種別ぶんのカード */
-function DueCard({ species, report, year, month }: { species: Species; report?: MonthlyReport; year: number; month: number }) {
+function DueCard({ orgId, species, report, prev, year, month }: {
+  orgId: string; species: Species; report?: MonthlyReport; prev?: MonthlyReport; year: number; month: number;
+}) {
   const done = report && report.status !== 'DRAFT';
+  const returned = report && isReturned(report);
   return (
-    <div className={done ? 'rounded-xl border border-emerald-200 bg-emerald-50 p-4' : 'rounded-xl border border-amber-200 bg-amber-50 p-4'}>
+    <div className={done ? 'rounded-xl border border-emerald-200 bg-emerald-50 p-4'
+      : returned ? 'rounded-xl border border-red-200 bg-red-50 p-4' : 'rounded-xl border border-amber-200 bg-amber-50 p-4'}>
       <div className="flex items-center justify-between gap-3">
         <div className="text-sm font-semibold text-slate-700">{SPECIES_ICON[species]} {SPECIES_LABEL[species]}</div>
-        {report ? <Badge color={STATUS_COLOR[report.status]}>{STATUS_LABEL[report.status]}</Badge> : <Badge color="amber">未入力</Badge>}
+        {returned ? <Badge color="red">差し戻し</Badge>
+          : report ? <Badge color={STATUS_COLOR[report.status]}>{STATUS_LABEL[report.status]}</Badge> : <Badge color="amber">未入力</Badge>}
       </div>
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {!report && <Link href={newHref(species, year, month)} className={buttonClass('primary', 'sm')}>入力する</Link>}
-        {report?.status === 'DRAFT' && <Link href={`/reports/${report.id}`} className={buttonClass('primary', 'sm')}>続きを入力して提出</Link>}
+        {!report && prev && (
+          <NoChangeButton orgId={orgId} species={species} year={year} month={month}
+            count={prev.endingCount} foster={prev.endingFosterCount} label={`${ymLabel(year, month)}分（${SPECIES_LABEL[species]}）`} />
+        )}
+        {report?.status === 'DRAFT' && (
+          <Link href={`/reports/${report.id}`} className={buttonClass('primary', 'sm')}>{returned ? '直して再提出' : '続きを入力して提出'}</Link>
+        )}
         {done && <Link href={`/reports/${report.id}`} className="text-sm font-medium text-emerald-700 hover:underline">内容を見る</Link>}
       </div>
+      {!report && prev && (
+        <p className="mt-2 text-xs text-slate-500">収容も転帰もなかった月は「動きなしで提出」でOK（頭数は前月のまま {prev.endingCount} 頭）</p>
+      )}
     </div>
   );
 }
@@ -50,6 +65,8 @@ export async function OrgHome({ session }: { session: Session }) {
   const fy = fiscalYear(due.year, due.month);
   const species: Species[] = expectedSpecies(org ?? {});
   const dl = deadlineFor(due.year, due.month, settings.deadlineDay);
+  const prevOfDue = due.month === 1 ? { year: due.year - 1, month: 12 } : { year: due.year, month: due.month - 1 };
+  const returnedReports = reports.filter(isReturned);
 
   const find = (s: Species, y: number, m: number) => reports.find((r) => r.species === s && r.year === y && r.month === m);
   const fyReports = reports.filter((r) => inFiscalPeriod(r, fy));
@@ -67,6 +84,21 @@ export async function OrgHome({ session }: { session: Session }) {
         <Link href={`/org-report/${orgId}?fy=${fy}`} className={buttonClass('secondary')}>📄 年度のまとめを見る</Link>
       </div>
 
+      {/* 差し戻し（最優先で目立たせる） */}
+      {returnedReports.map((r) => (
+        <div key={r.id} role="alert" className="mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="text-sm font-bold text-red-800">
+                事務局から差し戻されています：{ymLabel(r.year, r.month)}分（{SPECIES_LABEL[r.species]}）
+              </div>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-red-900">{r.returnNote}</p>
+            </div>
+            <Link href={`/reports/${r.id}`} className={buttonClass('primary', 'sm')}>直して再提出</Link>
+          </div>
+        </div>
+      ))}
+
       {/* 先月分 */}
       <Card className="mb-6">
         <CardBody>
@@ -83,7 +115,10 @@ export async function OrgHome({ session }: { session: Session }) {
             )}
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {species.map((s) => <DueCard key={s} species={s} report={find(s, due.year, due.month)} year={due.year} month={due.month} />)}
+            {species.map((s) => (
+              <DueCard key={s} orgId={orgId} species={s} report={find(s, due.year, due.month)}
+                prev={find(s, prevOfDue.year, prevOfDue.month)} year={due.year} month={due.month} />
+            ))}
           </div>
         </CardBody>
       </Card>
@@ -134,7 +169,7 @@ export async function OrgHome({ session }: { session: Session }) {
               </thead>
               <tbody>
                 {fiscalMonths(fy).map((fm) => {
-                  const future = isAfter(fm, due);
+                  const future = isAfter(fm, due) || !isParticipating(org ?? {}, fm.year, fm.month);
                   return (
                     <tr key={`${fm.year}-${fm.month}`} className="border-b border-slate-100 last:border-0">
                       <td className={future ? 'px-4 py-2.5 text-slate-300' : 'px-4 py-2.5 font-medium text-slate-700'}>{ymLabel(fm.year, fm.month)}</td>
@@ -144,7 +179,7 @@ export async function OrgHome({ session }: { session: Session }) {
                           <td key={s} className="px-4 py-2.5">
                             {r ? (
                               <Link href={`/reports/${r.id}`} className="inline-block hover:opacity-80">
-                                <Badge color={STATUS_COLOR[r.status]}>{STATUS_LABEL[r.status]}</Badge>
+                                {isReturned(r) ? <Badge color="red">差し戻し</Badge> : <Badge color={STATUS_COLOR[r.status]}>{STATUS_LABEL[r.status]}</Badge>}
                               </Link>
                             ) : future ? (
                               <span className="text-slate-300">—</span>

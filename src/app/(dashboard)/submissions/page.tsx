@@ -1,7 +1,8 @@
 // 事務局：提出状況（団体 × 月）。未提出の把握・連絡・還元レポートへの入口。
 import Link from 'next/link';
 import { requireRole } from '@/lib/auth/session';
-import { listOrganizations, listReports, getSettings } from '@/lib/data/repo';
+import { listOrganizations, listReports, getSettings, countAwaitingReview } from '@/lib/data/repo';
+import { ReviewQueue } from './ReviewQueue';
 import { fiscalYear, fiscalMonths, previousYearMonth, isAfter } from '@/lib/data/analytics';
 import { orgMonthStatus, type SlotState } from '@/lib/submissions';
 import { deadlineFor, formatDeadline } from '@/lib/deadline';
@@ -28,13 +29,14 @@ export default async function SubmissionsPage({
   const due = previousYearMonth();
   const year = Number(sp.y) || due.year;
   const month = Number(sp.m) >= 1 && Number(sp.m) <= 12 ? Number(sp.m) : due.month;
-  const view = sp.view === 'year' ? 'year' : 'month';
+  const view = sp.view === 'year' ? 'year' : sp.view === 'review' ? 'review' : 'month';
   const onlyMissing = sp.only === 'missing';
 
   const [allOrgs, settings] = await Promise.all([listOrganizations(), getSettings()]);
   const orgs = allOrgs.filter((o) => o.isActive);
   const fy = fiscalYear(year, month);
-  const reports = await listReports(view === 'year' ? {} : { year, month });
+  const reviewCount = await countAwaitingReview();
+  const reports = await listReports(view === 'month' ? { year, month } : view === 'review' ? { status: 'SUBMITTED' } : {});
 
   const prev = month === 1 ? { y: year - 1, m: 12 } : { y: year, m: month - 1 };
   const next = month === 12 ? { y: year + 1, m: 1 } : { y: year, m: month + 1 };
@@ -48,16 +50,22 @@ export default async function SubmissionsPage({
           <h1 className="text-2xl font-bold text-slate-800">提出状況</h1>
           <p className="mt-1 text-sm text-slate-500">団体ごとの月次報告の提出状況。未提出の団体への連絡や、団体別の還元レポートもここから。</p>
         </div>
+        <Link href={`/org-report/all?fy=${fy}`} className={buttonClass('secondary', 'sm')}>📄 還元レポートを全団体まとめて</Link>
         <div className="flex gap-1 rounded-full bg-slate-100 p-1">
           <Link href={qs({ view: 'month' })} className={cn('rounded-full px-4 py-1.5 text-sm', view === 'month' ? 'bg-white font-medium text-slate-800 shadow-sm' : 'text-slate-500')}>月ごと</Link>
+          <Link href={qs({ view: 'review' })} className={cn('rounded-full px-4 py-1.5 text-sm', view === 'review' ? 'bg-white font-medium text-slate-800 shadow-sm' : 'text-slate-500')}>
+            確認待ち{reviewCount > 0 && <span className="ml-1 rounded-full bg-sky-600 px-1.5 text-[11px] font-bold text-white">{reviewCount}</span>}
+          </Link>
           <Link href={qs({ view: 'year' })} className={cn('rounded-full px-4 py-1.5 text-sm', view === 'year' ? 'bg-white font-medium text-slate-800 shadow-sm' : 'text-slate-500')}>年度の一覧</Link>
         </div>
       </div>
 
+      {view === 'review' && <ReviewQueue reports={reports} orgs={allOrgs} />}
       {view === 'month'
-        ? <MonthView orgs={orgs} reports={reports} year={year} month={month} deadlineDay={settings.deadlineDay} onlyMissing={onlyMissing}
-            nav={{ prev: qs({ y: prev.y, m: prev.m, only: sp.only }), next: qs({ y: next.y, m: next.m, only: sp.only }), toggle: qs({ only: onlyMissing ? undefined : 'missing' }) }} />
-        : <YearView orgs={orgs} reports={reports} fy={fy} due={due}
+        && <MonthView orgs={orgs} reports={reports} year={year} month={month} deadlineDay={settings.deadlineDay} onlyMissing={onlyMissing}
+            nav={{ prev: qs({ y: prev.y, m: prev.m, only: sp.only }), next: qs({ y: next.y, m: next.m, only: sp.only }), toggle: qs({ only: onlyMissing ? undefined : 'missing' }) }} />}
+      {view === 'year'
+        && <YearView orgs={orgs} reports={reports} fy={fy} due={due}
             nav={{ prev: qs({ y: fy - 1, m: 4 }), next: qs({ y: fy + 1, m: 4 }) }} />}
     </div>
   );
@@ -70,7 +78,10 @@ function MonthView({ orgs, reports, year, month, deadlineDay, onlyMissing, nav }
   orgs: Orgs; reports: Reports; year: number; month: number; deadlineDay: number; onlyMissing: boolean;
   nav: { prev: string; next: string; toggle: string };
 }) {
-  const rows = orgs.map((org) => ({ org, st: orgMonthStatus(org, reports, year, month) }));
+  const all = orgs.map((org) => ({ org, st: orgMonthStatus(org, reports, year, month) }));
+  // 参加前の団体はこの月の対象外
+  const rows = all.filter((r) => r.st.state !== 'na');
+  const notJoined = all.length - rows.length;
   const done = rows.filter((r) => r.st.state === 'done').length;
   const partial = rows.filter((r) => r.st.state === 'partial').length;
   const none = rows.length - done - partial;
@@ -109,7 +120,7 @@ function MonthView({ orgs, reports, year, month, deadlineDay, onlyMissing, nav }
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="対象団体" value={rows.length} />
+        <StatCard label="対象団体" value={rows.length} sub={notJoined > 0 ? `ほかに参加前 ${notJoined} 団体` : undefined} />
         <StatCard label="提出完了" value={done} accent="emerald" sub="報告すべき種別がすべて提出済み" />
         <StatCard label="途中（下書き・片方のみ）" value={partial} accent="sky" />
         <StatCard label="未着手" value={none} accent="amber" />
@@ -133,7 +144,7 @@ function MonthView({ orgs, reports, year, month, deadlineDay, onlyMissing, nav }
               )}
               {shown.map(({ org, st }) => (
                 <tr key={org.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                  <td className="px-4 py-3">
+                  <td className="min-w-[10rem] px-4 py-3">
                     <Link href={`/organizations/${org.id}`} className="font-medium text-slate-700 hover:text-emerald-700">{org.name}</Link>
                     <div className="text-xs text-slate-400">{prefectureByCode(org.prefectureCode)?.name ?? ''}</div>
                   </td>
@@ -171,8 +182,8 @@ function YearView({ orgs, reports, fy, due, nav }: {
   orgs: Orgs; reports: Reports; fy: number; due: { year: number; month: number }; nav: { prev: string; next: string };
 }) {
   const months = fiscalMonths(fy);
-  const cell = { done: '●', partial: '◐', none: '○' } as const;
-  const cellCls = { done: 'text-emerald-600', partial: 'text-sky-500', none: 'text-amber-500' } as const;
+  const cell = { done: '●', partial: '◐', none: '○', na: '·' } as const;
+  const cellCls = { done: 'text-emerald-600', partial: 'text-sky-500', none: 'text-amber-500', na: 'text-slate-200' } as const;
 
   return (
     <>
@@ -181,7 +192,7 @@ function YearView({ orgs, reports, fy, due, nav }: {
         <span className="text-lg font-bold text-slate-800">{fy}年度</span>
         <Link href={nav.next} className={buttonClass('ghost', 'sm')} aria-label="次の年度">→</Link>
         <span className="text-xs text-slate-500">
-          <span className="text-emerald-600">●</span> 提出完了　<span className="text-sky-500">◐</span> 途中　<span className="text-amber-500">○</span> 未着手　マスをクリックするとその月の詳細へ
+          <span className="text-emerald-600">●</span> 提出完了　<span className="text-sky-500">◐</span> 途中　<span className="text-amber-500">○</span> 未着手　<span className="text-slate-300">·</span> 参加前　マスをクリックするとその月の詳細へ
         </span>
       </div>
       <Card>

@@ -355,6 +355,21 @@ export function _setReportStatus(id: string, status: ReportStatus): MonthlyRepor
   return r;
 }
 
+/** 状態・差し戻し・再提出などのメタ情報だけを更新する */
+export interface ReportMetaPatch {
+  status?: ReportStatus;
+  submittedAt?: string | null;
+  returnNote?: string | null;
+  returnedAt?: string | null;
+  resubmittedAt?: string | null;
+}
+export function _patchReportMeta(id: string, patch: ReportMetaPatch): void {
+  const r = _getReport(id);
+  if (!r) return;
+  for (const [k, v] of Object.entries(patch)) if (v !== undefined) (r as unknown as Record<string, unknown>)[k] = v;
+  r.updatedAt = nowIso();
+}
+
 export function _deleteReport(id: string): boolean {
   const r = _getReport(id);
   if (!r) return false;

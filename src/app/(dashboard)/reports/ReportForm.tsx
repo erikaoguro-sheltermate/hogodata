@@ -1,5 +1,6 @@
 'use client';
 
+import { yearOptions } from '@/lib/submissions';
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -175,8 +176,9 @@ export function ReportForm({
     try {
       const res = await saveReportAction(input, initial?.id, submit);
       if (res.ok) {
-        setServerMsg({ ok: true, text: submit ? '提出しました。' : '下書きを保存しました。' });
-        router.push('/reports');
+        setServerMsg({ ok: true, text: submit ? '提出しました。' : '保存しました。' });
+        // 提出（再提出を含む）は受付画面へ。下書きは団体ならホーム、事務局なら一覧へ。
+        router.push(submit && res.id ? `/reports/${res.id}/submitted` : isOrgUser ? '/' : '/reports');
         router.refresh();
       } else {
         setServerMsg({ ok: false, text: res.errors.map((e) => e.message).join(' / ') || '保存できませんでした。' });
@@ -208,7 +210,7 @@ export function ReportForm({
               <div className="grid grid-cols-2 gap-2">
                 <Field label="対象年" required>
                   <Select value={year} disabled={!canEdit} onChange={(e) => { const y = Number(e.target.value); setYear(y); syncPeriod(y, month); }}>
-                    {[2026, 2027].map((y) => <option key={y} value={y}>{y}年</option>)}
+                    {yearOptions().map((y) => <option key={y} value={y}>{y}年</option>)}
                   </Select>
                 </Field>
                 <Field label="対象月" required>
@@ -354,12 +356,26 @@ export function ReportForm({
 
           {canEdit ? (
             <div className="grid gap-2">
-              <Button onClick={() => handleSave(true)} disabled={saving || validation.errors.length > 0}>
-                {saving ? '保存中…' : '提出する'}
-              </Button>
-              <Button variant="secondary" onClick={() => handleSave(false)} disabled={saving || validation.errors.length > 0}>
-                下書き保存
-              </Button>
+              {isOrgUser && initial?.status === 'SUBMITTED' ? (
+                // 提出済みを団体が直す：再提出のみ（下書きには戻さない）
+                <Button onClick={() => handleSave(true)} disabled={saving || validation.errors.length > 0}>
+                  {saving ? '送信中…' : '修正して再提出'}
+                </Button>
+              ) : !isOrgUser && initial && initial.status !== 'DRAFT' ? (
+                // 事務局が提出済み・確定を直す：状態はそのまま
+                <Button onClick={() => handleSave(false)} disabled={saving || validation.errors.length > 0}>
+                  {saving ? '保存中…' : '修正を保存'}
+                </Button>
+              ) : (
+                <>
+                  <Button onClick={() => handleSave(true)} disabled={saving || validation.errors.length > 0}>
+                    {saving ? '送信中…' : '提出する'}
+                  </Button>
+                  <Button variant="secondary" onClick={() => handleSave(false)} disabled={saving || validation.errors.length > 0}>
+                    下書き保存（あとで続ける）
+                  </Button>
+                </>
+              )}
             </div>
           ) : (
             <div className="rounded-lg bg-slate-100 px-3 py-2 text-xs text-slate-500">確定済みのため編集できません（事務局のみ可）。</div>

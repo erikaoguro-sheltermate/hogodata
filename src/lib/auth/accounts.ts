@@ -31,7 +31,10 @@ export function accountAdminReady(): boolean {
 /** ログインアカウントを作成し、その id を返す。メールは確認済みとして作成する。 */
 export async function createAccount(email: string, password: string): Promise<{ id: string } | { error: string }> {
   if (!isSupabaseConfigured()) return { id: `demo-${crypto.randomUUID().slice(0, 8)}` };
-  const { data, error } = await supabaseAdmin().auth.admin.createUser({ email, password, email_confirm: true });
+  const { data, error } = await supabaseAdmin().auth.admin.createUser({
+    email, password, email_confirm: true,
+    user_metadata: { must_change_password: true }, // 初回ログイン後に変更をうながす
+  });
   if (error || !data.user) {
     const msg = error?.message ?? '';
     if (/already|registered|exists/i.test(msg)) return { error: 'このメールアドレスは既に登録されています。' };
@@ -42,7 +45,9 @@ export async function createAccount(email: string, password: string): Promise<{ 
 
 export async function setPassword(userId: string, password: string): Promise<{ error?: string }> {
   if (!isSupabaseConfigured()) return {};
-  const { error } = await supabaseAdmin().auth.admin.updateUserById(userId, { password });
+  const { error } = await supabaseAdmin().auth.admin.updateUserById(userId, {
+    password, user_metadata: { must_change_password: true },
+  });
   return error ? { error: `パスワードを変更できませんでした（${error.message}）。` } : {};
 }
 

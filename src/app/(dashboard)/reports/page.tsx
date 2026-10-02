@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { yearOptions } from '@/lib/submissions';
 import { listOrganizations, listReports, type ReportFilter } from '@/lib/data/repo';
 import { checkBalance } from '@/lib/validation/balance';
 import { requireRole } from '@/lib/auth/session';
@@ -54,7 +55,7 @@ export default async function ReportsPage({
       <form className="mb-4 flex flex-wrap items-center gap-2" method="get">
         <select name="year" defaultValue={sp.year ?? ''} className={inputCls}>
           <option value="">年（すべて）</option>
-          {[2026, 2027].map((y) => <option key={y} value={y}>{y}年</option>)}
+          {yearOptions().map((y) => <option key={y} value={y}>{y}年</option>)}
         </select>
         <select name="month" defaultValue={sp.month ?? ''} className={inputCls}>
           <option value="">月（すべて）</option>

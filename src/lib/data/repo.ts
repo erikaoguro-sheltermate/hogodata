@@ -9,8 +9,8 @@ import { DEFAULT_SETTINGS } from '../deadline';
 import * as memory from './memory-repo';
 import * as database from './prisma-repo';
 
-export type { ReportFilter } from './store';
-import type { ReportFilter } from './store';
+export type { ReportFilter, ReportMetaPatch } from './store';
+import type { ReportFilter, ReportMetaPatch } from './store';
 
 function impl() {
   return isDatabaseConfigured() ? database : memory;
@@ -43,6 +43,9 @@ export function saveReport(input: ReportInput, id: string | undefined, enteredBy
 }
 export function setReportStatus(id: string, status: ReportStatus): Promise<MonthlyReport | undefined> {
   return impl().setReportStatus(id, status);
+}
+export function patchReportMeta(id: string, patch: ReportMetaPatch): Promise<void> {
+  return impl().patchReportMeta(id, patch);
 }
 export function deleteReport(id: string): Promise<boolean> {
   return impl().deleteReport(id);
@@ -112,4 +115,9 @@ export function getSettings(): Promise<PortalSettings> {
 }
 export function saveSettings(s: PortalSettings): Promise<void> {
   return impl().saveSettings(s);
+}
+
+/** 確認待ち（提出済み・未確定）の件数 */
+export async function countAwaitingReview(): Promise<number> {
+  return (await listReports({ status: 'SUBMITTED' })).length;
 }
