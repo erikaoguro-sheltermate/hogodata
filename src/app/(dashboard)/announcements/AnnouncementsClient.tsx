@@ -65,9 +65,17 @@ export function AnnouncementsClient({ items, unreadIds, canEdit }: { items: Anno
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [error, setError] = React.useState<string | null>(null);
   async function remove(a: Announcement) {
-    if (!window.confirm(`お知らせ「${a.title}」を削除します。よろしいですか？`)) return;
-    await deleteAnnouncementAction(a.id, a.title);
+    if (!window.confirm(`お知らせ「${a.title}」を削除します。元に戻せません。よろしいですか？`)) return;
+    setError(null);
+    try {
+      const res = await deleteAnnouncementAction(a.id, a.title);
+      if (!res.ok) { setError(res.message); return; }
+    } catch {
+      setError('削除できませんでした。もう一度お試しください。');
+      return;
+    }
     router.refresh();
   }
 
@@ -79,6 +87,7 @@ export function AnnouncementsClient({ items, unreadIds, canEdit }: { items: Anno
         </div>
       )}
       {editing === 'new' && <Editor onDone={() => setEditing(null)} />}
+      {error && <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
       {items.length === 0 && (
         <Card><CardBody><p className="py-6 text-center text-sm text-slate-400">お知らせはまだありません</p></CardBody></Card>

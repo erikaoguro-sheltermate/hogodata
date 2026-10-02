@@ -42,7 +42,7 @@ export default async function ReportsPage({
           <ReportTabs current="monthly" orgId={session.organizationId!} />
         </>
       )}
-      <div className="mb-6 flex items-end justify-between">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className={isOrgUser ? 'text-lg font-bold text-slate-800' : 'text-2xl font-bold text-slate-800'}>
             {isOrgUser ? '毎月の報告' : '月次レポート'}
@@ -87,11 +87,11 @@ export default async function ReportsPage({
       </form>
 
       <Card>
-        <CardBody className="p-0">
+        <CardBody className="overflow-x-auto p-0">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-                <th className="px-4 py-3 font-medium">対象年月</th>
+                <th className="whitespace-nowrap px-4 py-3 font-medium">対象年月</th>
                 {!isOrgUser && <th className="px-4 py-3 font-medium">団体</th>}
                 <th className="px-4 py-3 font-medium">種別</th>
                 <th className="px-4 py-3 text-right font-medium">収容計</th>
@@ -110,7 +110,7 @@ export default async function ReportsPage({
                 const bal = checkBalance(r);
                 return (
                   <tr key={r.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-slate-700">{ymLabel(r.year, r.month)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 font-medium text-slate-700">{ymLabel(r.year, r.month)}</td>
                     {!isOrgUser && <td className="px-4 py-3 text-slate-700">{org?.name ?? '—'}</td>}
                     <td className="px-4 py-3 text-slate-600">{SPECIES_LABEL[r.species]}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-slate-700">{formatNumber(bal.intakeTotal)}</td>

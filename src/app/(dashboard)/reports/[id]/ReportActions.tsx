@@ -9,7 +9,7 @@ import { confirmReportAction, deleteReportAction, reopenReportAction } from '../
 const textareaCls =
   'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100';
 
-export function ReportActions({ id, status, role }: { id: string; status: ReportStatus; role: string }) {
+export function ReportActions({ id, status, role, label }: { id: string; status: ReportStatus; role: string; label: string }) {
   const router = useRouter();
   const [busy, setBusy] = React.useState(false);
   const [reopening, setReopening] = React.useState(false);
@@ -18,9 +18,12 @@ export function ReportActions({ id, status, role }: { id: string; status: Report
   if (role !== 'ADMIN') return null;
 
   async function confirm() {
+    if (!window.confirm(`「${label}」を確定します。確定後は団体側で修正できなくなります。よろしいですか？`)) return;
     setBusy(true);
-    await confirmReportAction(id);
+    setError(null);
+    const res = await confirmReportAction(id);
     setBusy(false);
+    if (!res.ok) { setError(res.message ?? '確定できませんでした。'); return; }
     router.refresh();
   }
   async function reopen(e: React.FormEvent) {
@@ -35,10 +38,12 @@ export function ReportActions({ id, status, role }: { id: string; status: Report
     router.refresh();
   }
   async function remove() {
-    if (!window.confirm('このレポートを削除（論理削除）します。よろしいですか？')) return;
+    if (!window.confirm(`「${label}」を削除します。一覧や集計から消え、元に戻せません。よろしいですか？`)) return;
     setBusy(true);
-    await deleteReportAction(id);
+    setError(null);
+    const res = await deleteReportAction(id);
     setBusy(false);
+    if (!res.ok) { setError(res.message ?? '削除できませんでした。'); return; }
     router.push('/reports');
     router.refresh();
   }
@@ -54,6 +59,7 @@ export function ReportActions({ id, status, role }: { id: string; status: Report
         )}
         <Button size="sm" variant="danger" onClick={remove} disabled={busy}>削除</Button>
       </div>
+      {error && !reopening && <p role="alert" className="text-sm text-red-600">{error}</p>}
       {reopening && (
         <form onSubmit={reopen} className="w-80 max-w-full space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
           <label className="block text-sm font-medium text-amber-900">

@@ -45,6 +45,7 @@ export interface ManagedCount { total: number; foster: number; dog: number; cat:
 export function currentManagedCount(reports: MonthlyReport[]): ManagedCount {
   const latest = new Map<string, MonthlyReport>();
   for (const r of reports) {
+    if (r.status === 'DRAFT') continue; // 入力途中の数字は使わない
     const key = `${r.organizationId}:${r.species}`;
     const cur = latest.get(key);
     if (!cur || r.year > cur.year || (r.year === cur.year && r.month > cur.month)) latest.set(key, r);

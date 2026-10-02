@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSession, requireRole } from '@/lib/auth/session';
-import { saveAnnouncement, deleteAnnouncement, markAnnouncementsRead, recordAudit } from '@/lib/data/repo';
+import { saveAnnouncement, deleteAnnouncement, markAnnouncementsRead, recordAudit, listAnnouncements } from '@/lib/data/repo';
 
 type Result = { ok: true } | { ok: false; message: string };
 
@@ -22,10 +22,12 @@ export async function saveAnnouncementAction(
   return { ok: true };
 }
 
-export async function deleteAnnouncementAction(id: string, title: string): Promise<Result> {
+export async function deleteAnnouncementAction(id: string, _title?: string): Promise<Result> {
   const session = await requireRole('ADMIN');
+  const target = (await listAnnouncements()).find((a) => a.id === id);
+  if (!target) return { ok: false, message: 'このお知らせは既に削除されています。' };
   await deleteAnnouncement(id);
-  await recordAudit({ actorId: session.userId, action: 'DELETE', entity: 'Announcement', entityId: id, summary: `お知らせ「${title}」` });
+  await recordAudit({ actorId: session.userId, action: 'DELETE', entity: 'Announcement', entityId: id, summary: `お知らせ「${target.title}」` });
   revalidatePath('/', 'layout');
   return { ok: true };
 }
@@ -34,6 +36,9 @@ export async function deleteAnnouncementAction(id: string, title: string): Promi
 export async function markReadAction(ids: string[]): Promise<void> {
   const session = await getSession();
   if (!session.hasAccess || ids.length === 0) return;
-  await markAnnouncementsRead(session.userId, ids);
+  const known = new Set((await listAnnouncements()).map((a) => a.id));
+  const valid = ids.filter((id) => known.has(id));
+  if (valid.length === 0) return;
+  await markAnnouncementsRead(session.userId, valid);
   revalidatePath('/', 'layout');
 }

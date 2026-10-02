@@ -37,7 +37,7 @@ export default async function SubmissionsPage({
   const orgs = allOrgs.filter((o) => o.isActive);
   const fy = fiscalYear(year, month);
   const reviewCount = await countAwaitingReview();
-  const reports = await listReports(view === 'month' ? { year, month } : view === 'review' ? { status: 'SUBMITTED' } : {});
+  const reports = await listReports(view === 'month' ? { year, month } : {});
 
   const prev = month === 1 ? { y: year - 1, m: 12 } : { y: year, m: month - 1 };
   const next = month === 12 ? { y: year + 1, m: 1 } : { y: year, m: month + 1 };

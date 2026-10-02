@@ -21,7 +21,7 @@ export default async function NewReportPage({
         <Link href="/reports" className="text-sm text-slate-400 hover:text-slate-600">← 月次レポート一覧</Link>
         <h1 className="mt-1 text-2xl font-bold text-slate-800">月次レポート入力</h1>
         <p className="mt-1 text-sm text-slate-500">
-          {session.role === 'ORG_USER' ? '種別・対象月を選び' : '団体・種別・対象月を選び'}、収容・転帰・管理頭数を入力します。収支整合は右側で常時チェックされます。
+          {session.role === 'ORG_USER' ? '種別・対象月を選び' : '団体・種別・対象月を選び'}、収容・転帰・管理頭数を入力します。収支の整合（開始＋収容−転帰＝終了）は画面の下（PCでは右側）で常にチェックされます。
         </p>
       </div>
       <ReportForm

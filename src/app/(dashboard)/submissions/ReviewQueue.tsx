@@ -11,7 +11,11 @@ export function ReviewQueue({ reports, orgs }: { reports: MonthlyReport[]; orgs:
     .filter((r) => r.status === 'SUBMITTED')
     .map((r) => {
       const bal = checkBalance(r);
+      const pm = r.month === 1 ? { year: r.year - 1, month: 12 } : { year: r.year, month: r.month - 1 };
+      const prev = reports.find((x) => x.organizationId === r.organizationId && x.species === r.species && x.year === pm.year && x.month === pm.month && x.status !== 'DRAFT');
+      const prevMismatch = !!prev && (prev.endingCount !== r.beginningCount || prev.endingFosterCount !== r.beginningFosterCount);
       return {
+        prevMismatch,
         id: r.id,
         orgName: orgs.find((o) => o.id === r.organizationId)?.name ?? '—',
         period: ymLabel(r.year, r.month),
@@ -24,6 +28,6 @@ export function ReviewQueue({ reports, orgs }: { reports: MonthlyReport[]; orgs:
         hasNote: !!r.note,
       };
     })
-    .sort((a, b) => Number(a.balanced) - Number(b.balanced) || a.sortKey.localeCompare(b.sortKey) || a.orgName.localeCompare(b.orgName, 'ja'));
+    .sort((a, b) => Number(a.balanced && !a.prevMismatch) - Number(b.balanced && !b.prevMismatch) || a.sortKey.localeCompare(b.sortKey) || a.orgName.localeCompare(b.orgName, 'ja'));
   return <ReviewQueueClient rows={rows} />;
 }

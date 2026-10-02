@@ -2,6 +2,7 @@
 
 import { yearOptions } from '@/lib/submissions';
 import { previousYearMonth } from '@/lib/data/analytics';
+import { expectedSpecies } from '@/lib/submissions';
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,7 +16,7 @@ import type {
   IntakeEntryInput, OutcomeEntryInput,
 } from '@/lib/types';
 import { Card, CardBody, Button, Badge, Field, Input, Select } from '@/components/ui';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, ymLabel } from '@/lib/format';
 import { saveReportAction, getPreviousEndingAction, type PreviousEnding } from './actions';
 import { cn } from '@/lib/utils';
 
@@ -55,7 +56,16 @@ export function ReportForm({
   const [orgId, setOrgId] = React.useState(
     initial?.organizationId ?? (isOrgUser ? sessionOrgId ?? '' : defaultOrgId ?? orgs[0]?.id ?? ''),
   );
-  const [species, setSpecies] = React.useState<Species>(initial?.species ?? defaultSpecies ?? 'CAT');
+  // 団体の報告対象（犬だけ・猫だけ）に合わせる。両方なら犬を既定にする
+  const currentOrg = orgs.find((o) => o.id === orgId);
+  const speciesOptions: Species[] = initial ? [initial.species] : expectedSpecies(currentOrg ?? {});
+  const [species, setSpecies] = React.useState<Species>(
+    initial?.species ?? (defaultSpecies && speciesOptions.includes(defaultSpecies) ? defaultSpecies : speciesOptions[0]),
+  );
+  React.useEffect(() => {
+    if (!speciesOptions.includes(species)) setSpecies(speciesOptions[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orgId]);
   const [year, setYear] = React.useState(initYear);
   const [month, setMonth] = React.useState(initMonth);
   const [periodStart, setPeriodStart] = React.useState(initial?.periodStart ?? firstDayIso(initYear, initMonth));
@@ -80,6 +90,8 @@ export function ReportForm({
 
   // 前月の月末頭数 → 今月の記録開始時（新規入力では自動で入れる。手で直したら上書きしない）
   const [prevEnding, setPrevEnding] = React.useState<PreviousEnding | null>(null);
+  const [prevChecked, setPrevChecked] = React.useState(false);
+  const prevOfSelected = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
   const beginningTouched = React.useRef(!!initial);
   const [autoFilled, setAutoFilled] = React.useState(false);
   React.useEffect(() => {
@@ -88,6 +100,7 @@ export function ReportForm({
     getPreviousEndingAction(orgId, species, year, month).then((p) => {
       if (cancelled) return;
       setPrevEnding(p);
+      setPrevChecked(true);
       if (!beginningTouched.current) {
         setBeginningCount(p?.endingCount ?? 0);
         setBeginningFosterCount(p?.endingFosterCount ?? 0);
@@ -164,6 +177,11 @@ export function ReportForm({
 
   const balance = checkBalance(input);
   const validation = validateReport(input);
+  // 主ボタン：団体が提出済みを直す→再提出 / 事務局が提出済み・確定を直す→保存 / それ以外→提出
+  const orgResubmit = isOrgUser && initial?.status === 'SUBMITTED';
+  const adminFix = !isOrgUser && !!initial && initial.status !== 'DRAFT';
+  const mainSubmit = !adminFix;
+  const mainLabel = orgResubmit ? '修正して再提出' : adminFix ? '修正を保存' : '提出する';
 
   async function handleSave(submit: boolean) {
     setSaving(true);
@@ -193,26 +211,25 @@ export function ReportForm({
         {/* ヘッダー */}
         <Card>
           <CardBody>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
               <Field label="団体" required>
                 <Select value={orgId} disabled={isOrgUser || !canEdit || !!initial} onChange={(e) => setOrgId(e.target.value)}>
                   {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </Select>
               </Field>
-              <Field label="種別" required>
-                <Select value={species} disabled={!canEdit} onChange={(e) => setSpecies(e.target.value as Species)}>
-                  <option value="DOG">犬</option>
-                  <option value="CAT">猫</option>
+              <Field label="種別" required hint={speciesOptions.length === 1 ? 'この団体の報告対象は 1 種別です' : undefined}>
+                <Select value={species} disabled={!canEdit || !!initial} onChange={(e) => setSpecies(e.target.value as Species)}>
+                  {speciesOptions.map((s) => <option key={s} value={s}>{s === 'DOG' ? '犬' : '猫'}</option>)}
                 </Select>
               </Field>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <Field label="対象年" required>
-                  <Select value={year} disabled={!canEdit} onChange={(e) => { const y = Number(e.target.value); setYear(y); syncPeriod(y, month); }}>
-                    {yearOptions().map((y) => <option key={y} value={y}>{y}年</option>)}
+                  <Select value={year} disabled={!canEdit || !!initial} onChange={(e) => { const y = Number(e.target.value); setYear(y); syncPeriod(y, month); }}>
+                    {yearOptions().map((y) => <option key={y} value={y}>{y}</option>)}
                   </Select>
                 </Field>
                 <Field label="対象月" required>
-                  <Select value={month} disabled={!canEdit} onChange={(e) => { const m = Number(e.target.value); setMonth(m); syncPeriod(year, m); }}>
+                  <Select value={month} disabled={!canEdit || !!initial} onChange={(e) => { const m = Number(e.target.value); setMonth(m); syncPeriod(year, m); }}>
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <option key={m} value={m}>{m}月</option>)}
                   </Select>
                 </Field>
@@ -233,15 +250,21 @@ export function ReportForm({
           total={beginningCount} foster={beginningFosterCount}
           onTotal={editBeginning} onFoster={editBeginningFoster} disabled={!canEdit}
         />
+        {!prevEnding && !initial && prevChecked && (
+          <p className="-mt-4 rounded-lg bg-slate-50 px-4 py-2 text-sm text-slate-600">
+            {ymLabel(prevOfSelected.year, prevOfSelected.month)}分の報告がまだないため、自動では入りません。月初の時点で管理していた頭数を入力してください。
+          </p>
+        )}
         {prevEnding && !beginningMismatch && autoFilled && (
           <p className="-mt-4 rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
-            ✓ {prevEnding.year}年{prevEnding.month}月の月末の頭数（{formatNumber(prevEnding.endingCount)}頭・うち一時預かり {formatNumber(prevEnding.endingFosterCount)}）を自動で入れました。
+            ✓ {prevEnding.year}年{prevEnding.month}月の記録終了時の頭数（{formatNumber(prevEnding.endingCount)}頭・うち一時預かり {formatNumber(prevEnding.endingFosterCount)}）を自動で入れました。
           </p>
         )}
         {prevEnding && beginningMismatch && (
           <div className="-mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800">
             <span>
-              {prevEnding.year}年{prevEnding.month}月の月末の頭数は {formatNumber(prevEnding.endingCount)}頭（うち一時預かり {formatNumber(prevEnding.endingFosterCount)}）です。今月の最初と違っています。
+              {prevEnding.year}年{prevEnding.month}月の記録終了時の頭数は {formatNumber(prevEnding.endingCount)}頭（うち一時預かり {formatNumber(prevEnding.endingFosterCount)}）で、今月の記録開始時と違っています。
+              前月の数字のほうが間違っている場合は前月の報告を直すか、備考に理由を書いてください。
             </span>
             {canEdit && <Button size="sm" variant="secondary" onClick={applyPrevEnding}>前月の数字にそろえる</Button>}
           </div>
@@ -328,8 +351,26 @@ export function ReportForm({
         </Card>
       </div>
 
+      {/* ===== スマホ用：画面下に収支と提出ボタンを固定 ===== */}
+      {canEdit && (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-2 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur lg:hidden print:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-xs">
+              <span className="text-slate-500">収支：</span>
+              {balance.balanced
+                ? <span className="font-semibold text-emerald-700">一致</span>
+                : <span className="font-semibold text-amber-700">差分 {balance.delta > 0 ? '+' : ''}{balance.delta}</span>}
+              {validation.errors.length > 0 && <span className="ml-2 text-red-600">⚠ 入力に誤りがあります</span>}
+            </div>
+            <Button size="sm" onClick={() => handleSave(mainSubmit)} disabled={saving || validation.errors.length > 0}>
+              {saving ? '送信中…' : mainLabel}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ===== 収支整合パネル（固定） ===== */}
-      <div>
+      <div className={canEdit ? 'pb-16 lg:pb-0' : undefined}>
         <div className="sticky top-6 space-y-4">
           <BalancePanel balance={balance} beginning={beginningCount} beginningFoster={beginningFosterCount} endingFoster={endingFosterCount} />
 
@@ -354,15 +395,9 @@ export function ReportForm({
 
           {canEdit ? (
             <div className="grid gap-2">
-              {isOrgUser && initial?.status === 'SUBMITTED' ? (
-                // 提出済みを団体が直す：再提出のみ（下書きには戻さない）
-                <Button onClick={() => handleSave(true)} disabled={saving || validation.errors.length > 0}>
-                  {saving ? '送信中…' : '修正して再提出'}
-                </Button>
-              ) : !isOrgUser && initial && initial.status !== 'DRAFT' ? (
-                // 事務局が提出済み・確定を直す：状態はそのまま
-                <Button onClick={() => handleSave(false)} disabled={saving || validation.errors.length > 0}>
-                  {saving ? '保存中…' : '修正を保存'}
+              {orgResubmit || adminFix ? (
+                <Button onClick={() => handleSave(mainSubmit)} disabled={saving || validation.errors.length > 0}>
+                  {saving ? '送信中…' : mainLabel}
                 </Button>
               ) : (
                 <>
@@ -420,7 +455,8 @@ function CategoryMatrix({ section, code, name, requiresRegion, catOnly, getCount
         <span className="text-sm font-medium text-slate-700">{name} {catOnly && <Badge color="blue">猫のみ</Badge>}</span>
         <span className="text-xs text-slate-500">小計 <span className="font-semibold text-slate-700">{formatNumber(catTotal)}</span></span>
       </div>
-      <table className="w-full text-sm">
+      <div className="overflow-x-auto">
+      <table className="w-full min-w-[22rem] text-sm">
         <thead>
           <tr className="text-xs text-slate-400">
             <th className="px-3 py-1.5 text-left font-medium">{requiresRegion ? '地域' : ''}</th>
@@ -442,9 +478,10 @@ function CategoryMatrix({ section, code, name, requiresRegion, catOnly, getCount
                     <td key={age.code} className="px-1 py-1">
                       <input
                         type="number" min={0} inputMode="numeric" disabled={disabled}
+                        aria-label={`${name}${requiresRegion ? ` ${REGION_LABEL[region]}` : ''} ${age.name}`}
                         value={v === 0 ? '' : v} placeholder="0"
                         onChange={(e) => setCount(key, parseInt(e.target.value, 10))}
-                        className="w-full rounded-md border border-slate-200 px-2 py-1 text-right text-sm tabular-nums outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 disabled:bg-slate-50"
+                        className="w-full min-w-[3.5rem] rounded-md border border-slate-200 px-2 py-1 text-right text-sm tabular-nums outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 disabled:bg-slate-50"
                       />
                     </td>
                   );
@@ -455,6 +492,7 @@ function CategoryMatrix({ section, code, name, requiresRegion, catOnly, getCount
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

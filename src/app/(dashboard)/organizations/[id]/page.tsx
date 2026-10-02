@@ -68,7 +68,7 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
     <div>
       <div className="mb-6">
         <Link href="/organizations" className="text-sm text-slate-400 hover:text-slate-600">← 団体マスタ一覧</Link>
-        <div className="mt-1 flex items-end justify-between gap-4">
+        <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-800">
               {org.name} {org.isActive ? <Badge color="green">有効</Badge> : <Badge color="slate">無効</Badge>}

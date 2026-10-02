@@ -31,7 +31,8 @@ export default async function EditReportPage({ params }: { params: Promise<{ id:
             <ReportStatusBadge report={report} />
           </h1>
         </div>
-        <ReportActions id={report.id} status={report.status} role={session.role} />
+        <ReportActions id={report.id} status={report.status} role={session.role}
+          label={`${org?.name ?? ''} ${ymLabel(report.year, report.month)} ${SPECIES_LABEL[report.species]}`} />
       </div>
       <StatusNotice report={report} isOrgUser={session.role === 'ORG_USER'} />
       <ReportForm

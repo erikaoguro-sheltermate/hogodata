@@ -30,7 +30,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-end justify-between">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">ダッシュボード</h1>
           <p className="mt-1 text-sm text-slate-500">
@@ -54,7 +54,7 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2">
           <SectionTitle subtitle="この月のレポート（提出済み・下書き）">届いたレポート</SectionTitle>
           <Card>
-            <CardBody className="p-0">
+            <CardBody className="overflow-x-auto p-0">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
