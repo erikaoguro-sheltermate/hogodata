@@ -62,10 +62,11 @@ export function ReportForm({
   const [species, setSpecies] = React.useState<Species>(
     initial?.species ?? (defaultSpecies && speciesOptions.includes(defaultSpecies) ? defaultSpecies : speciesOptions[0]),
   );
-  React.useEffect(() => {
-    if (!speciesOptions.includes(species)) setSpecies(speciesOptions[0]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId]);
+  function changeOrg(nextOrgId: string) {
+    setOrgId(nextOrgId);
+    const opts = expectedSpecies(orgs.find((o) => o.id === nextOrgId) ?? {});
+    if (!opts.includes(species)) setSpecies(opts[0]);
+  }
   const [year, setYear] = React.useState(initYear);
   const [month, setMonth] = React.useState(initMonth);
   const [periodStart, setPeriodStart] = React.useState(initial?.periodStart ?? firstDayIso(initYear, initMonth));
@@ -213,7 +214,7 @@ export function ReportForm({
           <CardBody>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
               <Field label="団体" required>
-                <Select value={orgId} disabled={isOrgUser || !canEdit || !!initial} onChange={(e) => setOrgId(e.target.value)}>
+                <Select value={orgId} disabled={isOrgUser || !canEdit || !!initial} onChange={(e) => changeOrg(e.target.value)}>
                   {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
                 </Select>
               </Field>

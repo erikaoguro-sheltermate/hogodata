@@ -6,7 +6,7 @@ import { getSettings } from '@/lib/data/repo';
 import { Card, CardBody, SectionTitle } from '@/components/ui';
 
 const STEPS = [
-  { title: 'ホームの「入力する」を押す', body: '先月分の報告がまだの場合、ホームの一番上に犬・猫ごとのボタンが出ます。過去の月は「レポート」の一覧や、ホームの提出状況の表からも入力できます。' },
+  { title: 'ホームの「入力する」を押す', body: '先月分の報告がまだの場合、ホームの一番上に犬・猫ごとのボタンが出ます。過去の月は、ホームの「提出状況」の表の「未入力 ＋」からも入力できます。' },
   { title: '① 記録開始時の管理頭数を確認する', body: '前月の報告があれば、前月の月末の頭数が自動で入っています。違っている場合だけ直してください。' },
   { title: '② 新規収容・③ 転帰を入力する', body: 'その月に新しく保護した頭数と、譲渡・返還・死亡などで送り出した頭数を、区分と年齢ごとに入力します。0 の欄は空のままで構いません。' },
   { title: '④ 記録終了時の管理頭数を入力する', body: '月末時点の頭数です。画面の下（PCでは右側）の「収支整合チェック」で「開始 ＋ 収容 − 転帰 ＝ 終了」になっているか確認できます。' },
@@ -36,7 +36,7 @@ const FAQ = [
 ];
 
 export default async function HelpPage() {
-  await requireSession();
+  const session = await requireSession();
   const settings = await getSettings();
 
   return (
@@ -48,6 +48,9 @@ export default async function HelpPage() {
         </p>
       </div>
 
+      {session.role !== 'ORG_USER' && (
+        <p className="mb-4 rounded-lg bg-slate-50 px-4 py-2 text-xs text-slate-500">このページは団体ユーザー向けの説明です。団体の方からの質問に答えるときの参考にしてください。</p>
+      )}
       <SectionTitle>毎月の報告のしかた</SectionTitle>
       <Card className="mb-8">
         <CardBody>
@@ -62,9 +65,11 @@ export default async function HelpPage() {
               </li>
             ))}
           </ol>
-          <div className="mt-5">
-            <Link href="/" className="text-sm font-medium text-emerald-700 hover:underline">→ ホームから入力をはじめる</Link>
-          </div>
+          {session.role === 'ORG_USER' && (
+            <div className="mt-5">
+              <Link href="/" className="text-sm font-medium text-emerald-700 hover:underline">→ ホームから入力をはじめる</Link>
+            </div>
+          )}
         </CardBody>
       </Card>
 

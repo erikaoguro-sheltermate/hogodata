@@ -21,11 +21,15 @@ interface Props {
 
 /** 初期パスワードは一度だけ表示する（保存しない） */
 function PasswordNotice({ email, password, onClose }: { email: string; password: string; onClose: () => void }) {
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = React.useState<boolean | 'failed'>(false);
   const text = `どうぶつ保護データプロジェクト ログイン情報\nURL: ${window.location.origin}/login\nメールアドレス: ${email}\n初期パスワード: ${password}\n※ログイン後「アカウント」からパスワードを変更してください。`;
   async function copy() {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      setCopied('failed');
+    }
   }
   return (
     <Card className="mb-6 border-2 border-emerald-300">
@@ -36,7 +40,8 @@ function PasswordNotice({ email, password, onClose }: { email: string; password:
         </p>
         <pre className="whitespace-pre-wrap rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-700">{text}</pre>
         <div className="flex gap-2">
-          <Button size="sm" onClick={copy}>{copied ? 'コピーしました' : 'まとめてコピー'}</Button>
+          <Button size="sm" onClick={copy}>{copied === true ? 'コピーしました' : 'まとめてコピー'}</Button>
+          {copied === 'failed' && <span className="self-center text-xs text-red-600">コピーできませんでした。上の文章を選択してコピーしてください。</span>}
           <Button size="sm" variant="ghost" onClick={onClose}>閉じる</Button>
         </div>
       </CardBody>

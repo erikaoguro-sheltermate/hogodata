@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { Role } from '@/lib/types';
+import { ROLE_LABEL } from '@/lib/masters';
 import { logout } from '@/app/login/actions';
 
 interface NavItem {
@@ -32,7 +33,8 @@ const NAV: NavItem[] = [
   { href: '/account', label: 'アカウント', icon: '🔑', roles: ['ADMIN', 'ORG_USER', 'VIEWER'] },
 ];
 
-const ROLE_LABEL: Record<Role, string> = { ADMIN: '事務局', ORG_USER: '団体', VIEWER: '閲覧者' };
+// デモ切替ボタン用の短い呼び名。表示名の横には masters の正式名を使う
+const ROLE_SHORT: Record<Role, string> = { ADMIN: '事務局', ORG_USER: '団体', VIEWER: '閲覧者' };
 
 function isActive(item: NavItem, pathname: string): boolean {
   if (item.href === '/') return pathname === '/';
@@ -114,7 +116,7 @@ export function Sidebar({ role, displayName, mode, unreadCount, reviewCount = 0 
                   r === role ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
                 )}
               >
-                {ROLE_LABEL[r]}
+                {ROLE_SHORT[r]}
               </button>
             ))}
           </div>
@@ -147,7 +149,7 @@ export function Sidebar({ role, displayName, mode, unreadCount, reviewCount = 0 
           className="relative rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
         >
           {open ? '閉じる' : '☰ メニュー'}
-          {!open && unreadCount > 0 && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />}
+          {!open && (unreadCount > 0 || reviewCount > 0) && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />}
         </button>
       </header>
       {open && (

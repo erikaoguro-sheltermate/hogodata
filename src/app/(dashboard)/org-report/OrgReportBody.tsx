@@ -71,7 +71,7 @@ export function OrgReportBody({ org, orgReports, nationalReports, fy, q }: {
             <h2 className="mb-2 text-base font-bold text-slate-700">この期間の活動</h2>
             <div className="grid grid-cols-2 gap-3 text-center md:grid-cols-4">
               {[
-                ['新たに保護した数', formatNumber(summary.intakeTotal), '頭'],
+                ['新規収容（新たに保護した数）', formatNumber(summary.intakeTotal), '頭'],
                 ['送り出した数（転帰）', formatNumber(summary.outcomeTotal), '頭'],
                 ['うち譲渡など生存転帰', formatNumber(summary.liveOutcomeTotal), '頭'],
                 ['生存転帰率', summary.liveReleaseRate === null ? '—' : `${summary.liveReleaseRate}`, summary.liveReleaseRate === null ? '' : '%'],
@@ -109,7 +109,7 @@ export function OrgReportBody({ org, orgReports, nationalReports, fy, q }: {
               <thead><tr>
                 <th className={`${th} text-left`}>月</th>
                 {species.map((s) => (
-                  <th key={s} className={th} colSpan={3}>{SPECIES_LABEL[s]}（保護 / 送り出し / 月末頭数）</th>
+                  <th key={s} className={th} colSpan={3}>{SPECIES_LABEL[s]}（新規収容 / 転帰 / 記録終了時の頭数）</th>
                 ))}
               </tr></thead>
               <tbody>

@@ -17,11 +17,17 @@ export interface OrgMonthStatus {
   state: OrgMonthState;
 }
 
+/** 犬・猫のどちらかを報告対象にしている団体か（未設定なら対象） */
+export function handlesDogOrCat(org: Pick<Organization, 'animalTypes'>): boolean {
+  const t = org.animalTypes ?? [];
+  return t.length === 0 || t.includes('DOG') || t.includes('CAT');
+}
+
 export function orgMonthStatus(
   org: Pick<Organization, 'id' | 'animalTypes' | 'joinedYear' | 'joinedMonth'>, reports: MonthlyReport[], year: number, month: number,
 ): OrgMonthStatus {
   const species = expectedSpecies(org);
-  const participating = isParticipating(org, year, month);
+  const participating = isParticipating(org, year, month) && handlesDogOrCat(org);
   const slots: OrgMonthStatus['slots'] = {};
   let submitted = 0;
   let any = 0;

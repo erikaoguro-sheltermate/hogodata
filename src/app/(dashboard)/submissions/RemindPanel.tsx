@@ -7,10 +7,14 @@ import { Button, Card, CardBody } from '@/components/ui';
 export function RemindPanel({ emails, missing, subject, body }: {
   emails: string[]; missing: string[]; subject: string; body: string;
 }) {
-  const [copied, setCopied] = React.useState<'emails' | 'body' | null>(null);
+  const [copied, setCopied] = React.useState<'emails' | 'body' | 'failed' | null>(null);
   async function copy(kind: 'emails' | 'body') {
-    await navigator.clipboard.writeText(kind === 'emails' ? emails.join(', ') : `件名：${subject}\n\n${body}`);
-    setCopied(kind);
+    try {
+      await navigator.clipboard.writeText(kind === 'emails' ? emails.join(', ') : `件名：${subject}\n\n${body}`);
+      setCopied(kind);
+    } catch {
+      setCopied('failed');
+    }
   }
   const mailto = `mailto:?bcc=${encodeURIComponent(emails.join(','))}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
@@ -30,6 +34,7 @@ export function RemindPanel({ emails, missing, subject, body }: {
             <Button size="sm" variant="secondary" onClick={() => copy('emails')}>{copied === 'emails' ? 'コピーしました' : '宛先をコピー'}</Button>
           )}
         </div>
+        {copied === 'failed' && <p className="text-xs text-red-600">コピーできませんでした。上の文章を選択してコピーしてください。</p>}
         {missing.length > 0 && (
           <p className="text-xs text-amber-700">
             連絡先メールが未登録の団体：{missing.join('、')}（団体マスタで登録できます）

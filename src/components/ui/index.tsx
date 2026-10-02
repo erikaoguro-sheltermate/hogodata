@@ -71,7 +71,19 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
 
 export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
   function Select({ className, children, ...props }, ref) {
-    return <select ref={ref} className={cn(inputBase, 'appearance-none pr-8', className)} {...props}>{children}</select>;
+    return (
+      <select
+        ref={ref}
+        className={cn(inputBase, 'appearance-none bg-no-repeat pr-8', className)}
+        style={{
+          backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round'/></svg>\")",
+          backgroundPosition: 'right 0.75rem center',
+        }}
+        {...props}
+      >
+        {children}
+      </select>
+    );
   },
 );
 

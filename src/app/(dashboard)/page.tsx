@@ -94,7 +94,9 @@ export default async function DashboardPage() {
           <Card>
             <CardBody>
               {unsubmitted.length === 0 ? (
-                <p className="text-sm text-slate-400">未提出の団体はありません 🎉</p>
+                <p className="text-sm text-slate-400">
+                  {orgs.filter((o) => o.isActive).length === 0 ? '団体がまだ登録されていません。' : '未提出の団体はありません 🎉'}
+                </p>
               ) : (
                 <ul className="space-y-2">
                   {unsubmitted.map((o) => (

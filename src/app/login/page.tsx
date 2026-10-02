@@ -65,7 +65,10 @@ export default async function LoginPage({
               <form action={gateLogin} className="space-y-3">
                 <p className="text-center text-sm text-slate-500">運営パスワードを入力してください</p>
                 {sp.error && <ErrorBox>パスワードが正しくありません</ErrorBox>}
-                <input type="password" name="password" required autoFocus placeholder="パスワード" className={inputCls} />
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium text-slate-700">運営パスワード</span>
+                  <input type="password" name="password" required autoFocus autoComplete="current-password" className={inputCls} />
+                </label>
                 <Button type="submit" className="w-full">ログイン</Button>
               </form>
             )}

@@ -90,6 +90,7 @@ npm run build      # 本番ビルド
 
 ## 権限・プライバシー
 admin=全団体 / org_user=自団体のみ / viewer=集計のみ（個別生データ不可）。
+共有パスワード（gate）モードは事務局固定・ロール切替なし・cookie は署名トークン（`src/lib/auth/gate.ts`）。日付の「今日」判定は必ず `src/lib/jst.ts` 経由（サーバーは UTC）。
 **Prisma は RLS を通らない**ため、団体分離はアプリ層の `src/lib/auth/policy.ts`（テスト済み）で担保する。
 ページは `requireSession()` / `requireRole()`、一覧は `scopeReportFilter()`、個票は `canViewReport()` を必ず通す。
 匿名集計のみ外部還元可。団体名特定の公開・第三者提供は行わない。

@@ -245,6 +245,9 @@ export function OrganizationsClient({ organizations, canEdit }: { organizations:
               </tr>
             </thead>
             <tbody>
+              {organizations.length === 0 && (
+                <tr><td colSpan={99} className="px-4 py-8 text-center text-sm text-slate-400">団体がまだ登録されていません。「＋ 団体を追加」から登録してください。</td></tr>
+              )}
               {organizations.map((o) => (
                 <tr key={o.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium">

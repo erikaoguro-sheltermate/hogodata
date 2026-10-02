@@ -48,7 +48,7 @@ export default async function AuditPage() {
                   <td className="px-4 py-3 text-slate-700">{e.actorName}</td>
                   <td className="px-4 py-3"><Badge color={ACTION_COLOR[e.action] ?? 'slate'}>{ACTION_LABEL[e.action] ?? e.action}</Badge></td>
                   <td className="px-4 py-3 text-slate-600">
-                    {e.entity === 'MonthlyReport'
+                    {e.entity === 'MonthlyReport' && e.action !== 'DELETE'
                       ? <Link href={`/reports/${e.entityId}`} className="hover:text-emerald-700 hover:underline">{e.summary ?? e.entityId}</Link>
                       : (e.summary ?? `${e.entity} ${e.entityId}`)}
                   </td>

@@ -64,6 +64,8 @@ export async function getSession(): Promise<Session> {
   if (mode === 'demo') return getDemoSession();
   if (mode === 'gate') {
     // 共有パスワード運用中はロール切替なし・全員が事務局。cookie のロールは読まない。
+    // ただし cookies() に触れてリクエスト単位の描画にする（静的化してビルド時にDBへ行かないように）
+    await cookies();
     return { userId: GATE_ADMIN_ID, email: null, displayName: '事務局（共有パスワード）', role: 'ADMIN', organizationId: null, hasAccess: true };
   }
 

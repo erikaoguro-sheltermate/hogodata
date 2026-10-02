@@ -141,7 +141,11 @@ function MonthView({ orgs, reports, year, month, deadlineDay, onlyMissing, nav }
             </thead>
             <tbody>
               {shown.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">すべての団体が提出済みです 🎉</td></tr>
+                <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                  {rows.length === 0
+                    ? <>対象の団体がまだありません。<Link href="/organizations" className="text-emerald-700 hover:underline">団体マスタ</Link>から登録してください。</>
+                    : 'すべての団体が提出済みです 🎉'}
+                </td></tr>
               )}
               {shown.map(({ org, st }) => (
                 <tr key={org.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
