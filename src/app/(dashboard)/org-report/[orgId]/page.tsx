@@ -12,13 +12,15 @@ import { requireSession } from '@/lib/auth/session';
 import { canViewOrgSummary } from '@/lib/auth/policy';
 import { SPECIES_LABEL, prefectureByCode } from '@/lib/masters';
 import { formatNumber, ymLabel } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import type { Species } from '@/lib/types';
 import { PrintBar } from '../../../report/PrintButton';
 import { ReportTabs } from '../../reports/ReportTabs';
 import { BreakdownTable } from '../../../report/BreakdownTable';
 import { TrendChart } from '../../analytics/AnalyticsCharts';
 
-const QUARTER_LABEL: Record<number, string> = { 1: 'Q1（4〜6月）', 2: 'Q2（7〜9月）', 3: 'Q3（10〜12月）', 4: 'Q4（1〜3月）' };
+const QUARTER_LABEL: Record<number, string> = { 1: '第1四半期（4〜6月）', 2: '第2四半期（7〜9月）', 3: '第3四半期（10〜12月）', 4: '第4四半期（1〜3月）' };
+const QUARTER_SHORT: Record<number, string> = { 1: '4〜6月', 2: '7〜9月', 3: '10〜12月', 4: '1〜3月' };
 
 export default async function OrgReportPage({
   params,
@@ -64,13 +66,15 @@ export default async function OrgReportPage({
 
   const periodLabel = `${fy}年度${q ? ` ${QUARTER_LABEL[q]}` : '（4月〜翌3月）'}`;
   const today = new Date().toLocaleDateString('ja-JP', { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'long', day: 'numeric' });
-  const base = `/org-report/${orgId}?fy=${fy}`;
 
   const th = 'border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600';
   const td = 'border border-slate-300 px-3 py-1.5 text-sm';
   const tdR = `${td} text-right tabular-nums`;
-  const tab = (active: boolean) =>
-    active ? 'rounded-full bg-slate-800 px-3 py-1 text-xs font-medium text-white' : 'rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 hover:bg-slate-200';
+  const href = (y: number, quarter?: number) => `/org-report/${orgId}?fy=${y}${quarter ? `&q=${quarter}` : ''}`;
+  const seg = (active: boolean) => cn(
+    'flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-center text-sm transition-colors',
+    active ? 'bg-white font-semibold text-emerald-800 shadow-sm ring-1 ring-emerald-200' : 'text-slate-600 hover:bg-white/70',
+  );
 
   return (
     <>
@@ -89,12 +93,21 @@ export default async function OrgReportPage({
       />
 
       {/* 期間切替（印刷されない） */}
-      <div className="no-print mb-6 flex flex-wrap items-center gap-2">
-        <span className="text-sm text-slate-500">期間：</span>
-        <Link href={`/org-report/${orgId}?fy=${fy - 1}${q ? `&q=${q}` : ''}`} className={tab(false)}>← {fy - 1}年度</Link>
-        <Link href={base} className={tab(!q)}>{fy}年度 通年</Link>
-        {[1, 2, 3, 4].map((n) => <Link key={n} href={`${base}&q=${n}`} className={tab(q === n)}>{QUARTER_LABEL[n]}</Link>)}
-        <Link href={`/org-report/${orgId}?fy=${fy + 1}${q ? `&q=${q}` : ''}`} className={tab(false)}>{fy + 1}年度 →</Link>
+      <div className="no-print mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <span className="text-sm font-medium text-slate-600">表示する期間</span>
+          <div className="flex items-center gap-1" role="group" aria-label="年度">
+            <Link href={href(fy - 1, q)} aria-label={`${fy - 1}年度へ`} className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-slate-600 hover:border-emerald-300 hover:text-emerald-700">← 前の年度</Link>
+            <span className="min-w-[5.5rem] text-center text-base font-bold text-slate-800">{fy}年度</span>
+            <Link href={href(fy + 1, q)} aria-label={`${fy + 1}年度へ`} className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-slate-600 hover:border-emerald-300 hover:text-emerald-700">次の年度 →</Link>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1 rounded-xl bg-slate-200/60 p-1" role="group" aria-label="範囲">
+          <Link href={href(fy)} aria-current={!q ? 'true' : undefined} className={seg(!q)}>1年間（4月〜翌3月）</Link>
+          {[1, 2, 3, 4].map((n) => (
+            <Link key={n} href={href(fy, n)} aria-current={q === n ? 'true' : undefined} className={seg(q === n)}>{QUARTER_SHORT[n]}</Link>
+          ))}
+        </div>
       </div>
 
       {/* ヘッダー */}
