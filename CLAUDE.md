@@ -31,12 +31,15 @@ Vitest（バリデーション単体テスト）。
 | F-05/06 一覧・ステータス | ✅ `/reports` フィルタ・下書/提出/確定 |
 | F-07 集計ダッシュボード | ✅ `/analytics` Recharts |
 | F-09 CSVエクスポート | ✅ `/api/exports/reports` |
-| F-11 ユーザー・権限 | ✅ `/settings/users`（ロール定義・境界） |
+| F-11 ユーザー・権限 | ✅ `/settings/users` 事務局がアカウント作成・初期パスワード発行・再発行・停止 |
+| F-12 監査ログ | ✅ `/settings/audit`（レポート作成/更新/提出/確定/差し戻し/削除、ユーザー操作） |
+| Phase 2 団体の自己入力 | ✅ 団体ユーザーのホーム（先月分・年度の提出状況）。提出→事務局が確定、確定前は団体が修正可、事務局は差し戻し可 |
+| F-10 団体向け還元レポート | ✅ `/org-report/[orgId]` 年度・四半期、印刷/PDF（提出済み・確定のみ集計） |
 | F-13 マスタ管理 | ✅ `/masters`（閲覧。編集はM後続） |
-| F-01 認証 | ✅ 共有パスワードゲート（`APP_PASSWORD`・運営向け）。`src/middleware.ts` |
+| F-01 認証 | ✅ Supabase Auth のメール＋パスワード（設定時）。未設定なら共有パスワード（`APP_PASSWORD`）→ デモの順にフォールバック。`/account` でパスワード変更 |
 | 本番DB | ✅ 配線済み。`DATABASE_URL` で Prisma に自動切替（`src/lib/data/`） |
 | RLS | ✅ `prisma/rls.sql` 用意済み。手順書どおり適用すれば有効 |
-| F-08 Excel取込 / F-10 還元PDF | ⏳ M4（将来） |
+| F-08 Excel取込 | ⏳ 将来 |
 
 ## ディレクトリ構成
 ```
@@ -49,7 +52,10 @@ src/lib/types.ts         ← ドメイン型（Prismaモデル対応）
 src/lib/masters.ts       ← マスタ定義（seedと同一の真実источник）
 src/lib/validation/      ← V-01〜V-09 + 収支整合（純粋関数・テスト対象）
 src/lib/data/            ← データ層（store=インメモリ, repo=非同期API, analytics=集計）
-src/lib/auth/session.ts  ← セッション（デモ=Cookie / 本番=Supabase）
+src/lib/auth/session.ts  ← セッション（デモ=Cookie / 本番=Supabase）・requireSession/requireRole
+src/lib/auth/policy.ts   ← 認可ルール（団体分離）・初期パスワード生成（純粋関数・テスト対象）
+src/lib/auth/accounts.ts ← アカウント作成・再発行・停止（Supabase 管理API）
+scripts/create-admin.ts  ← 最初の事務局アカウント作成
 src/components/           ← UIプリミティブ・Sidebar・チャート
 tests/                   ← Vitest（バリデーション）
 ```
@@ -61,7 +67,8 @@ npm run typecheck  # 型チェック
 npm run test       # Vitest（バリデーション）
 npm run build      # 本番ビルド
 ```
-画面左下の「表示ロール」で 事務局 / 団体 / 閲覧者 を切り替えてデモできる。
+デモモード（Supabase 未設定）では画面左下の「表示ロール」で 事務局 / 団体 / 閲覧者 を切り替えてデモできる。
+本番DBを汚さずに試すときは `DATABASE_URL= APP_PASSWORD= npm run dev`（インメモリ＋デモ）。
 
 ## 本番DB接続（M1）
 手順は [docs/db-setup.md](docs/db-setup.md) 参照。要点は `.env` 設定 → `npm run db:migrate` →
@@ -77,6 +84,8 @@ npm run build      # 本番ビルド
 
 ## 権限・プライバシー
 admin=全団体 / org_user=自団体のみ / viewer=集計のみ（個別生データ不可）。
+**Prisma は RLS を通らない**ため、団体分離はアプリ層の `src/lib/auth/policy.ts`（テスト済み）で担保する。
+ページは `requireSession()` / `requireRole()`、一覧は `scopeReportFilter()`、個票は `canViewReport()` を必ず通す。
 匿名集計のみ外部還元可。団体名特定の公開・第三者提供は行わない。
 
 ## コミット規約

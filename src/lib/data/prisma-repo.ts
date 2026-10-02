@@ -5,6 +5,7 @@
 import { prisma } from '../db';
 import type {
   Organization, MonthlyReport, ReportInput, ReportStatus, Species, AnimalKind, Region,
+  UserProfile, AuditEntry, AuditAction, Role,
 } from '../types';
 import type { ReportFilter } from './store';
 
@@ -266,4 +267,61 @@ export async function saveReportNote(key: string, body: string, updatedBy?: stri
     update: { body, updatedBy: updatedBy ?? null },
     create: { key, body, updatedBy: updatedBy ?? null },
   });
+}
+
+// ============================================================
+// Profiles / Audit
+// ============================================================
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toAppProfile(p: any): UserProfile {
+  return {
+    id: p.id,
+    email: p.email,
+    displayName: p.displayName,
+    role: p.role as Role,
+    organizationId: p.organizationId,
+    createdAt: p.createdAt.toISOString(),
+  };
+}
+
+export async function listProfiles(): Promise<UserProfile[]> {
+  const rows = await prisma.profile.findMany({ orderBy: { displayName: 'asc' } });
+  return rows.map(toAppProfile);
+}
+export async function getProfile(id: string): Promise<UserProfile | undefined> {
+  const p = await prisma.profile.findUnique({ where: { id } });
+  return p ? toAppProfile(p) : undefined;
+}
+export async function upsertProfile(p: Omit<UserProfile, 'createdAt'>): Promise<UserProfile> {
+  const data = { email: p.email, displayName: p.displayName, role: p.role, organizationId: p.organizationId };
+  const row = await prisma.profile.upsert({ where: { id: p.id }, update: data, create: { id: p.id, ...data } });
+  return toAppProfile(row);
+}
+
+export async function recordAudit(e: Omit<AuditEntry, 'id' | 'createdAt' | 'actorName'>): Promise<void> {
+  // actor は Profile への外部キー。Profile の無い操作者（共有パスワード運用など）は記録しない。
+  const actor = await prisma.profile.findUnique({ where: { id: e.actorId }, select: { id: true } });
+  if (!actor) return;
+  await prisma.auditLog.create({
+    data: {
+      actorId: e.actorId,
+      action: e.action,
+      entity: e.entity,
+      entityId: e.entityId,
+      diff: e.summary ? { summary: e.summary } : undefined,
+    },
+  });
+}
+export async function listAudit(limit: number): Promise<AuditEntry[]> {
+  const rows = await prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' }, take: limit, include: { actor: true } });
+  return rows.map((r) => ({
+    id: r.id,
+    actorId: r.actorId,
+    actorName: r.actor.displayName,
+    action: r.action as AuditAction,
+    entity: r.entity,
+    entityId: r.entityId,
+    summary: (r.diff as { summary?: string } | null)?.summary ?? null,
+    createdAt: r.createdAt.toISOString(),
+  }));
 }

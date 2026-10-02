@@ -6,7 +6,7 @@
 
 import type {
   Organization, MonthlyReport, ReportInput, ReportStatus,
-  Species, IntakeEntryInput, OutcomeEntryInput,
+  Species, IntakeEntryInput, OutcomeEntryInput, UserProfile, AuditEntry,
 } from '../types';
 import { PREFECTURES, INTAKE_CATEGORIES, OUTCOME_CATEGORIES } from '../masters';
 import { checkBalance } from '../validation/balance';
@@ -15,6 +15,8 @@ interface DB {
   organizations: Organization[];
   reports: MonthlyReport[];
   notes: Record<string, string>;
+  profiles: UserProfile[];
+  audit: AuditEntry[];
 }
 
 // HMR をまたいで状態を保持する（dev で seed が毎回走らないように）
@@ -151,7 +153,14 @@ function seed(): DB {
       status: 'DRAFT', submittedAt: null },
   ];
 
-  return { organizations, reports, notes: {} };
+  // デモのロール切替ユーザー（session.ts の DEMO_USERS と同じ id）
+  const profiles: UserProfile[] = [
+    { id: 'demo-admin', email: 'admin@example.org', displayName: 'JASA事務局（デモ）', role: 'ADMIN', organizationId: null, createdAt: nowIso() },
+    { id: 'demo-org', email: 'aozora@example.org', displayName: '団体ユーザー（デモ）', role: 'ORG_USER', organizationId: 'org_1', createdAt: nowIso() },
+    { id: 'demo-viewer', email: 'viewer@example.org', displayName: '閲覧者（デモ）', role: 'VIEWER', organizationId: null, createdAt: nowIso() },
+  ];
+
+  return { organizations, reports, notes: {}, profiles, audit: [] };
 }
 
 export function _getReportNote(key: string): string | null {
@@ -163,7 +172,37 @@ export function _saveReportNote(key: string, body: string): void {
 
 function db(): DB {
   if (!g.__jasaDB) g.__jasaDB = seed();
+  // HMR で古い形の DB が残っている場合の補完
+  g.__jasaDB.profiles ??= seed().profiles;
+  g.__jasaDB.audit ??= [];
   return g.__jasaDB;
+}
+
+// ============================================================
+// Profiles / Audit
+// ============================================================
+export function _listProfiles(): UserProfile[] {
+  return db().profiles.slice().sort((a, b) => a.displayName.localeCompare(b.displayName, 'ja'));
+}
+export function _getProfile(id: string): UserProfile | undefined {
+  return db().profiles.find((p) => p.id === id);
+}
+export function _upsertProfile(p: Omit<UserProfile, 'createdAt'>): UserProfile {
+  const existing = _getProfile(p.id);
+  if (existing) {
+    Object.assign(existing, p);
+    return existing;
+  }
+  const created = { ...p, createdAt: nowIso() };
+  db().profiles.push(created);
+  return created;
+}
+export function _recordAudit(e: Omit<AuditEntry, 'id' | 'createdAt' | 'actorName'>): void {
+  const actorName = _getProfile(e.actorId)?.displayName ?? e.actorId;
+  db().audit.push({ ...e, actorName, id: `aud_${crypto.randomUUID().slice(0, 8)}`, createdAt: nowIso() });
+}
+export function _listAudit(limit: number): AuditEntry[] {
+  return db().audit.slice(-limit).reverse();
 }
 
 // ============================================================

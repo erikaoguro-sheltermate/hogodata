@@ -3,8 +3,14 @@ import { updateSession } from '@/lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  const supabaseOn = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
-  // ① 共有パスワードゲート（APP_PASSWORD 設定時に有効。運営向けの軽量ガード）
+  // ① 本番：Supabase Auth（メール＋パスワード）。設定されていれば共有パスワードより優先。
+  if (supabaseOn) {
+    return updateSession(request);
+  }
+
+  // ② 共有パスワードゲート（APP_PASSWORD 設定時に有効。Supabase 導入前の運営向け軽量ガード）
   const gatePw = process.env.APP_PASSWORD;
   if (gatePw) {
     const isPublic = path.startsWith('/login');
@@ -14,11 +20,6 @@ export async function middleware(request: NextRequest) {
       url.pathname = '/login';
       return NextResponse.redirect(url);
     }
-  }
-
-  // ② Supabase Auth（設定時のみ。Phase 2 の団体ユーザー向け）
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return updateSession(request);
   }
 
   // どちらも未設定＝デモ（認証なし）

@@ -19,7 +19,7 @@ export function DemoRoleButtons() {
   return (
     <div className="space-y-3">
       <p className="text-center text-xs text-slate-400">
-        デモ環境です。本番は共有パスワードまたは Supabase Auth でログインします。
+        デモ環境です。本番はメールアドレスとパスワードでログインします。
       </p>
       {ROLES.map((r) => (
         <button key={r.role} onClick={() => enter(r.role)}

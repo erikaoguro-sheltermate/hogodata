@@ -3,7 +3,7 @@
 // DATABASE_URL が設定されていれば Prisma（本番DB）、未設定ならインメモリ（デモ）を使う。
 // UI（Server Components / Server Actions）はこの層のみを呼ぶ。
 
-import type { Organization, MonthlyReport, ReportInput, ReportStatus, Species } from '../types';
+import type { Organization, MonthlyReport, ReportInput, ReportStatus, Species, UserProfile, AuditEntry } from '../types';
 import { isDatabaseConfigured } from '../db';
 import * as memory from './memory-repo';
 import * as database from './prisma-repo';
@@ -52,4 +52,25 @@ export function getReportNote(key: string): Promise<string | null> {
 }
 export function saveReportNote(key: string, body: string, updatedBy?: string): Promise<void> {
   return impl().saveReportNote(key, body, updatedBy);
+}
+
+export function listProfiles(): Promise<UserProfile[]> {
+  return impl().listProfiles();
+}
+export function getProfile(id: string): Promise<UserProfile | undefined> {
+  return impl().getProfile(id);
+}
+export function upsertProfile(p: Omit<UserProfile, 'createdAt'>): Promise<UserProfile> {
+  return impl().upsertProfile(p);
+}
+/** 監査ログ（F-12）。記録の失敗で本処理を止めない。 */
+export async function recordAudit(e: Omit<AuditEntry, 'id' | 'createdAt' | 'actorName'>): Promise<void> {
+  try {
+    await impl().recordAudit(e);
+  } catch (err) {
+    console.error('[audit] 記録に失敗しました', err);
+  }
+}
+export function listAudit(limit = 200): Promise<AuditEntry[]> {
+  return impl().listAudit(limit);
 }

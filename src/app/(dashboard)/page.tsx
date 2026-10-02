@@ -4,8 +4,15 @@ import { summarize } from '@/lib/data/analytics';
 import { Card, CardBody, StatCard, Badge, buttonClass, SectionTitle } from '@/components/ui';
 import { SPECIES_LABEL, prefectureByCode } from '@/lib/masters';
 import { ymLabel, formatNumber } from '@/lib/format';
+import { redirect } from 'next/navigation';
+import { requireSession } from '@/lib/auth/session';
+import { OrgHome } from './OrgHome';
 
 export default async function DashboardPage() {
+  const session = await requireSession();
+  if (session.role === 'ORG_USER') return <OrgHome session={session} />;
+  if (session.role === 'VIEWER') redirect('/analytics');
+
   const [orgs, allReports] = await Promise.all([listOrganizations(), listReports()]);
 
   // 最新の対象期間（デモのシードは 2026-05 が最新）

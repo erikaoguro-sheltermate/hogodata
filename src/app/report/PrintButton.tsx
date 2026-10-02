@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 
-export function PrintBar() {
+export function PrintBar({ backHref = '/analytics', backLabel = '集計に戻る' }: { backHref?: string; backLabel?: string } = {}) {
   return (
     <div className="no-print mb-6 flex items-center justify-between gap-2">
-      <Link href="/analytics" className="text-sm text-slate-400 hover:text-slate-600">← 集計に戻る</Link>
+      <Link href={backHref} className="text-sm text-slate-400 hover:text-slate-600">← {backLabel}</Link>
       <button
         onClick={() => window.print()}
         className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700"

@@ -4,6 +4,8 @@ import { SPECIES_LABEL, REGION_BLOCKS } from '@/lib/masters';
 import { formatNumber } from '@/lib/format';
 import type { Species } from '@/lib/types';
 import { PrintBar } from './PrintButton';
+import { BreakdownTable } from './BreakdownTable';
+import { requireSession } from '@/lib/auth/session';
 
 const PERIOD_LABEL: Record<PeriodType, string> = { month: '月次', quarter: '四半期', year: '年次' };
 
@@ -13,6 +15,7 @@ export default async function ReportPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
+  await requireSession();
   const period = (['month', 'quarter', 'year'].includes(sp.period ?? '') ? sp.period : 'quarter') as PeriodType;
   const filter: ReportFilter = {
     year: sp.year ? Number(sp.year) : undefined,
@@ -129,34 +132,5 @@ export default async function ReportPage({
         ※ 本レポートは「比較・評価」を目的とせず、現場の振り返りと政策・支援の意思決定に役立てることを目的としています。団体間のランキング等は掲載していません。
       </p>
     </div>
-  );
-}
-
-function BreakdownTable({ title, rows, th, td, tdR }: {
-  title: string;
-  rows: { code: string; name: string; u5m: number; m5_10y: number; o10y: number; total: number }[];
-  th: string; td: string; tdR: string;
-}) {
-  return (
-    <section>
-      <h2 className="mb-2 text-base font-bold text-slate-700">{title}</h2>
-      <table className="w-full border-collapse">
-        <thead><tr>
-          <th className={`${th} text-left`}>区分</th><th className={th}>〜5ヶ月</th><th className={th}>5ヶ月〜10歳</th><th className={th}>10歳〜</th><th className={th}>計</th>
-        </tr></thead>
-        <tbody>
-          {rows.length === 0 && <tr><td className={`${td} text-center text-slate-400`} colSpan={5}>データなし</td></tr>}
-          {rows.map((r) => (
-            <tr key={r.code}>
-              <td className={td}>{r.name}</td>
-              <td className={tdR}>{formatNumber(r.u5m)}</td>
-              <td className={tdR}>{formatNumber(r.m5_10y)}</td>
-              <td className={tdR}>{formatNumber(r.o10y)}</td>
-              <td className={`${tdR} font-semibold`}>{formatNumber(r.total)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
   );
 }

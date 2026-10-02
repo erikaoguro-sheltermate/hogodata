@@ -3,15 +3,28 @@
 // 未設定のデモ環境では Cookie でロールを切り替える（ログイン不要で動作）。
 
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import type { Role } from '../types';
 import { isSupabaseConfigured, createSupabaseServerClient } from '../supabase/server';
-import { isDatabaseConfigured, prisma } from '../db';
+import { getProfile } from '../data/repo';
 
 export interface Session {
   userId: string;
+  email: string | null;
   displayName: string;
   role: Role;
   organizationId: string | null;
+  /** ログイン済みだが Profile 未登録・停止中など、アプリを使えない状態なら false */
+  hasAccess: boolean;
+}
+
+/** 認証方式：supabase=メール+パスワード / gate=共有パスワード / demo=ロール切替 */
+export type AuthMode = 'supabase' | 'gate' | 'demo';
+
+export function authMode(): AuthMode {
+  if (isSupabaseConfigured()) return 'supabase';
+  if (process.env.APP_PASSWORD) return 'gate';
+  return 'demo';
 }
 
 const ROLE_COOKIE = 'jasa_role';
@@ -25,38 +38,60 @@ const DEMO_USERS: Record<Role, { userId: string; displayName: string; organizati
 
 async function getDemoSession(): Promise<Session> {
   const store = await cookies();
-  const role = (store.get(ROLE_COOKIE)?.value as Role) || 'ADMIN';
-  const base = DEMO_USERS[role] ?? DEMO_USERS.ADMIN;
+  const raw = store.get(ROLE_COOKIE)?.value as Role | undefined;
+  const role: Role = raw && raw in DEMO_USERS ? raw : 'ADMIN';
+  const base = DEMO_USERS[role];
   const orgOverride = store.get(ORG_COOKIE)?.value || null;
   return {
     userId: base.userId,
+    email: null,
     displayName: base.displayName,
-    role: role in DEMO_USERS ? role : 'ADMIN',
+    role,
     organizationId: role === 'ORG_USER' ? (orgOverride ?? base.organizationId) : null,
+    hasAccess: true,
   };
 }
 
+const NO_ACCESS = { role: 'VIEWER' as Role, organizationId: null, hasAccess: false };
+
 export async function getSession(): Promise<Session> {
+  if (authMode() !== 'supabase') return getDemoSession();
+
   // 本番：Supabase Auth + Profile（ロール・所属団体）
-  if (isSupabaseConfigured()) {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const profile = isDatabaseConfigured()
-        ? await prisma.profile.findUnique({ where: { id: user.id } })
-        : null;
-      return {
-        userId: user.id,
-        displayName: profile?.displayName ?? user.email ?? 'ユーザー',
-        role: (profile?.role as Role) ?? 'VIEWER',
-        organizationId: profile?.organizationId ?? null,
-      };
-    }
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
     // middleware が未ログインを /login にリダイレクトするため通常ここには来ない
-    return { userId: 'anonymous', displayName: 'ゲスト', role: 'VIEWER', organizationId: null };
+    return { userId: 'anonymous', email: null, displayName: 'ゲスト', ...NO_ACCESS };
   }
-  // デモ：Cookie ロール切替
-  return getDemoSession();
+  const profile = await getProfile(user.id);
+  const banned = !!user.banned_until && new Date(user.banned_until) > new Date();
+  if (!profile || banned) {
+    return { userId: user.id, email: user.email ?? null, displayName: user.email ?? 'ユーザー', ...NO_ACCESS };
+  }
+  const orgUserWithoutOrg = profile.role === 'ORG_USER' && !profile.organizationId;
+  return {
+    userId: user.id,
+    email: user.email ?? profile.email,
+    displayName: profile.displayName,
+    role: profile.role,
+    organizationId: profile.organizationId,
+    hasAccess: !orgUserWithoutOrg,
+  };
+}
+
+/** ログイン済みかつ利用可能なセッションを返す。使えない状態ならログイン画面へ。 */
+export async function requireSession(): Promise<Session> {
+  const session = await getSession();
+  if (!session.hasAccess) redirect('/login?error=noaccess');
+  return session;
+}
+
+/** 指定ロールのみ通す。それ以外はホームへ。 */
+export async function requireRole(...roles: Role[]): Promise<Session> {
+  const session = await requireSession();
+  if (!roles.includes(session.role)) redirect('/');
+  return session;
 }
 
 export function isAdmin(session: Session): boolean {

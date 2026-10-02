@@ -1,7 +1,7 @@
 // JASA Data Hub — インメモリ版データアクセス（デモ/開発用）。
 // store.ts（シード済みインメモリ）を非同期APIでラップする。
 
-import type { Organization, MonthlyReport, ReportInput, ReportStatus, Species } from '../types';
+import type { Organization, MonthlyReport, ReportInput, ReportStatus, Species, UserProfile, AuditEntry } from '../types';
 import * as store from './store';
 
 export async function listOrganizations(): Promise<Organization[]> {
@@ -41,4 +41,20 @@ export async function getReportNote(key: string): Promise<string | null> {
 }
 export async function saveReportNote(key: string, body: string, _updatedBy?: string): Promise<void> {
   store._saveReportNote(key, body);
+}
+
+export async function listProfiles(): Promise<UserProfile[]> {
+  return store._listProfiles();
+}
+export async function getProfile(id: string): Promise<UserProfile | undefined> {
+  return store._getProfile(id);
+}
+export async function upsertProfile(p: Omit<UserProfile, 'createdAt'>): Promise<UserProfile> {
+  return store._upsertProfile(p);
+}
+export async function recordAudit(e: Omit<AuditEntry, 'id' | 'createdAt' | 'actorName'>): Promise<void> {
+  store._recordAudit(e);
+}
+export async function listAudit(limit: number): Promise<AuditEntry[]> {
+  return store._listAudit(limit);
 }

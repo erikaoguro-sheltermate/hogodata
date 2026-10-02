@@ -35,20 +35,34 @@ npm run db:seed       # マスタ投入（年齢区分・カテゴリー・47都
 ## 4. RLS ポリシー適用（団体データの分離）
 Supabase の **SQL Editor** で [`prisma/rls.sql`](../prisma/rls.sql) の内容を実行する。
 
-## 5. 最初の管理者ユーザーを作成
-1. アプリの `/login` からメールでサインアップ（または Supabase Auth ダッシュボードで作成）。
-2. その `auth.users.id` に対応する `Profile` 行を作成し、ロールを ADMIN に：
-   ```sql
-   insert into "Profile" (id, email, "displayName", role)
-   values ('<auth.users.idをここに>', 'admin@example.org', 'JASA事務局', 'ADMIN');
+## 5. ログイン（Supabase Auth）を有効にする
+1. Supabase の **Authentication → Sign In / Providers** で
+   - **Email** を有効のまま、**Allow new users to sign up をオフ**（アカウントは事務局だけが作る）
+   - **Confirm email をオフ**（事務局が作るアカウントは確認済みとして作成するため不要）
+2. **Settings → API** から次の 3 つを `.env` と Vercel の環境変数（Production）に設定：
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`（**サーバー専用**。`NEXT_PUBLIC_` を付けない・チャットや Git に貼らない）
+3. 最初の事務局アカウントを作る（2 人目以降は画面から）：
+   ```bash
+   set -a && . ./.env && set +a
+   npm run user:create-admin -- admin@example.org "JASA事務局 山田"
    ```
+   初期パスワードがターミナルに一度だけ表示される。ログイン後「アカウント」で変更する。
+4. Supabase の設定が入ると共有パスワード（`APP_PASSWORD`）は使われなくなる。不要になったら Vercel から削除してよい。
+
+### 団体ユーザーの追加（運用）
+事務局でログイン →「ユーザー」→「＋ ユーザーを追加」→ メール・お名前・権限・所属団体を入力。
+表示された「ログイン情報」をコピーして団体に伝える（初期パスワードは再表示できない）。
+パスワードを忘れた団体には「パスワード再発行」、退会・担当交代は「停止」。
 
 ## 6. 起動して確認
 ```bash
 npm run dev
 ```
 - `DATABASE_URL` 設定済み → データが永続化（再起動で消えない）
-- Supabase 設定済み → 未ログインは `/login` にリダイレクト、ロールは Profile で判定
+- Supabase 設定済み → 未ログインは `/login` にリダイレクト、ロールと所属団体は Profile で判定
+- Profile の無いアカウント・停止中のアカウントは「ご利用いただけません」と表示される
 
 ---
 
@@ -57,6 +71,7 @@ npm run dev
 インメモリ＋ロール切替のデモモードに戻る。
 
 ## 補足
-- 団体ユーザーは自団体のみ・閲覧者は集計のみ、という分離は `prisma/rls.sql` がDB層で担保する。
+- 団体ユーザーは自団体のみ・閲覧者は集計のみ、という分離は**アプリ層**（`src/lib/auth/policy.ts`）で担保する。
+  Prisma はRLSを通らない接続のため、`prisma/rls.sql` は Supabase REST API 経由の直接アクセスを塞ぐ役割。
 - 既存マイグレーションは変更せず、スキーマ変更は `npm run db:migrate` で新規追加する。
 - 本番デプロイ（Vercel）では `npm run db:deploy`（`migrate deploy`）を使う。

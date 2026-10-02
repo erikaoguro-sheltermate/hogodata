@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { listReports, getReportNote, type ReportFilter } from '@/lib/data/repo';
 import { summarize, summarizeByPeriod, currentManagedCount, generateInsights, noteKey, type PeriodType } from '@/lib/data/analytics';
-import { getSession, isAdmin } from '@/lib/auth/session';
+import { requireSession, isAdmin } from '@/lib/auth/session';
 import { Card, CardBody, StatCard, buttonClass, SectionTitle, Badge } from '@/components/ui';
 import { CommentarySection } from './CommentarySection';
 import { REGION_BLOCKS } from '@/lib/masters';
@@ -18,7 +18,7 @@ export default async function AnalyticsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const session = await getSession();
+  const session = await requireSession();
   const period = (['month', 'quarter', 'year'].includes(sp.period ?? '') ? sp.period : 'quarter') as PeriodType;
   const filter: ReportFilter = {
     year: sp.year ? Number(sp.year) : undefined,
@@ -53,7 +53,9 @@ export default async function AnalyticsPage({
         <div className="flex flex-wrap gap-2">
           <a href={`/report?period=${period}&${exportQs.toString()}`} className={buttonClass('primary')}>📄 PDFレポート</a>
           <a href={`/api/exports/summary?period=${period}&${exportQs.toString()}`} className={buttonClass('secondary')}>⬇ 期間集計CSV</a>
-          <a href={`/api/exports/reports?${exportQs.toString()}`} className={buttonClass('secondary')}>⬇ 生データCSV</a>
+          {isAdmin(session) && (
+            <a href={`/api/exports/reports?${exportQs.toString()}`} className={buttonClass('secondary')}>⬇ 生データCSV</a>
+          )}
         </div>
       </div>
 

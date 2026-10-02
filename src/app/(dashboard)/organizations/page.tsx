@@ -1,8 +1,9 @@
 import { listOrganizations } from '@/lib/data/repo';
-import { getSession, isAdmin } from '@/lib/auth/session';
+import { requireRole } from '@/lib/auth/session';
 import { OrganizationsClient } from './OrganizationsClient';
 
 export default async function OrganizationsPage() {
-  const [orgs, session] = await Promise.all([listOrganizations(), getSession()]);
-  return <OrganizationsClient organizations={orgs} canEdit={isAdmin(session)} />;
+  await requireRole('ADMIN');
+  const orgs = await listOrganizations();
+  return <OrganizationsClient organizations={orgs} canEdit />;
 }

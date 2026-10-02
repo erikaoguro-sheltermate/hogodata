@@ -1,7 +1,9 @@
 import { Card, CardBody, Badge, SectionTitle } from '@/components/ui';
+import { requireRole } from '@/lib/auth/session';
 import { INTAKE_CATEGORIES, OUTCOME_CATEGORIES, AGE_GROUPS, REGION_OPTIONS } from '@/lib/masters';
 
-export default function MastersPage() {
+export default async function MastersPage() {
+  await requireRole('ADMIN');
   return (
     <div>
       <div className="mb-6">

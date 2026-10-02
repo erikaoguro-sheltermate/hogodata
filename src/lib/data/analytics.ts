@@ -236,3 +236,30 @@ export function summarizeByPeriod(reports: MonthlyReport[], type: PeriodType): P
     }))
     .sort((a, b) => a.key.localeCompare(b.key));
 }
+
+// ============================================================
+// 年度（4月始まり）ヘルパー — 団体ホーム・還元レポート用
+// ============================================================
+export interface YearMonth { year: number; month: number }
+
+/** 年度の 12 か月（4月〜翌3月）。q を指定するとその四半期の 3 か月 */
+export function fiscalMonths(fy: number, q?: number): YearMonth[] {
+  const all = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map((m) => ({ year: m >= 4 ? fy : fy + 1, month: m }));
+  return q ? all.slice((q - 1) * 3, q * 3) : all;
+}
+
+export function inFiscalPeriod(r: Pick<MonthlyReport, 'year' | 'month'>, fy: number, q?: number): boolean {
+  if (fiscalYear(r.year, r.month) !== fy) return false;
+  return q ? fiscalQuarter(r.month) === q : true;
+}
+
+/** 入力対象となる「先月」（月初に前月分を入力する運用） */
+export function previousYearMonth(now: Date = new Date()): YearMonth {
+  const m = now.getMonth(); // 0-11 = 先月の 1-12
+  return m === 0 ? { year: now.getFullYear() - 1, month: 12 } : { year: now.getFullYear(), month: m };
+}
+
+/** a が b より後の月か */
+export function isAfter(a: YearMonth, b: YearMonth): boolean {
+  return a.year > b.year || (a.year === b.year && a.month > b.month);
+}

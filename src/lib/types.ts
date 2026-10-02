@@ -119,3 +119,27 @@ export interface MonthlyReport extends ReportInput {
   createdAt: string;
   updatedAt: string;
 }
+
+// ---- ユーザー（Profile） ----
+// 認証本体は Supabase Auth。ここではロールと所属団体のみ持つ。
+export interface UserProfile {
+  id: string; // Supabase auth.users.id
+  email: string;
+  displayName: string;
+  role: Role;
+  organizationId: string | null;
+  createdAt: string;
+}
+
+// ---- 監査ログ（F-12） ----
+export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'SUBMIT' | 'CONFIRM' | 'REOPEN';
+export interface AuditEntry {
+  id: string;
+  actorId: string;
+  actorName: string;
+  action: AuditAction;
+  entity: string;
+  entityId: string;
+  summary: string | null;
+  createdAt: string;
+}

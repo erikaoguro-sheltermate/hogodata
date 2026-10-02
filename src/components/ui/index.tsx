@@ -45,7 +45,7 @@ export function Badge({ color = 'slate', children }: { color?: 'slate' | 'green'
     blue: 'bg-sky-100 text-sky-700',
     red: 'bg-red-100 text-red-700',
   };
-  return <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', colors[color])}>{children}</span>;
+  return <span className={cn('inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium', colors[color])}>{children}</span>;
 }
 
 // ---- Form ----

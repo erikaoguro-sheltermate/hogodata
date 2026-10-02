@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getOrganization, listReports } from '@/lib/data/repo';
+import { requireRole } from '@/lib/auth/session';
 import { summarize, summarizeByPeriod } from '@/lib/data/analytics';
 import { Card, CardBody, Badge, StatCard, buttonClass, SectionTitle } from '@/components/ui';
 import { prefectureByCode, STATUS_LABEL, ANIMAL_KIND_LABEL } from '@/lib/masters';
@@ -40,6 +41,7 @@ function StatusCell({ report, href }: { report: MonthlyReport | undefined; href:
 
 export default async function OrganizationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  await requireRole('ADMIN');
   const org = await getOrganization(id);
   if (!org) notFound();
   const reports = await listReports({ organizationId: id });
@@ -76,7 +78,10 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
               {org.contactName && ` ・ 担当：${org.contactName}`}
             </p>
           </div>
-          <Link href={`/reports/new?org=${org.id}`} className={buttonClass('primary')}>＋ レポートを入力</Link>
+          <div className="flex gap-2">
+            <Link href={`/org-report/${org.id}`} className={buttonClass('secondary')}>📄 還元レポート</Link>
+            <Link href={`/reports/new?org=${org.id}`} className={buttonClass('primary')}>＋ レポートを入力</Link>
+          </div>
         </div>
       </div>
 

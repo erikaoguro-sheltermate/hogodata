@@ -2,6 +2,7 @@
 import { listReports, listOrganizations, type ReportFilter } from '@/lib/data/repo';
 import { reportIntakeTotal, reportOutcomeTotal } from '@/lib/data/analytics';
 import { SPECIES_LABEL, STATUS_LABEL, prefectureByCode } from '@/lib/masters';
+import { getSession } from '@/lib/auth/session';
 import type { Species } from '@/lib/types';
 
 function csvCell(v: string | number): string {
@@ -10,6 +11,10 @@ function csvCell(v: string | number): string {
 }
 
 export async function GET(request: Request) {
+  const session = await getSession();
+  if (!session.hasAccess || session.role !== 'ADMIN') {
+    return new Response('生データの出力は事務局のみ可能です。', { status: 403 });
+  }
   const url = new URL(request.url);
   const filter: ReportFilter = {
     year: url.searchParams.get('year') ? Number(url.searchParams.get('year')) : undefined,

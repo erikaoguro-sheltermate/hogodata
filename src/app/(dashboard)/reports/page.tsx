@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { listOrganizations, listReports, type ReportFilter } from '@/lib/data/repo';
 import { checkBalance } from '@/lib/validation/balance';
+import { requireRole } from '@/lib/auth/session';
+import { scopeReportFilter } from '@/lib/auth/policy';
 import { Card, CardBody, Badge, buttonClass } from '@/components/ui';
 import { SPECIES_LABEL, STATUS_LABEL } from '@/lib/masters';
 import { ymLabel, formatNumber } from '@/lib/format';
@@ -14,22 +16,27 @@ export default async function ReportsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const filter: ReportFilter = {
+  const session = await requireRole('ADMIN', 'ORG_USER');
+  const isOrgUser = session.role === 'ORG_USER';
+  const filter: ReportFilter = scopeReportFilter(session, {
     year: sp.year ? Number(sp.year) : undefined,
     month: sp.month ? Number(sp.month) : undefined,
     species: (sp.species as Species) || undefined,
     status: (sp.status as ReportStatus) || undefined,
     organizationId: sp.org || undefined,
-  };
+  });
 
-  const [orgs, reports] = await Promise.all([listOrganizations(), listReports(filter)]);
+  const [allOrgs, reports] = await Promise.all([listOrganizations(), listReports(filter)]);
+  const orgs = isOrgUser ? allOrgs.filter((o) => o.id === session.organizationId) : allOrgs;
 
   return (
     <div>
       <div className="mb-6 flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">月次レポート</h1>
-          <p className="mt-1 text-sm text-slate-500">{reports.length} 件</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {isOrgUser && orgs[0] ? `${orgs[0].name} ・ ` : ''}{reports.length} 件
+          </p>
         </div>
         <Link href="/reports/new" className={buttonClass('primary')}>＋ 新規入力</Link>
       </div>
@@ -55,10 +62,12 @@ export default async function ReportsPage({
           <option value="SUBMITTED">提出済み</option>
           <option value="CONFIRMED">確定</option>
         </select>
-        <select name="org" defaultValue={sp.org ?? ''} className={inputCls}>
-          <option value="">団体（すべて）</option>
-          {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-        </select>
+        {!isOrgUser && (
+          <select name="org" defaultValue={sp.org ?? ''} className={inputCls}>
+            <option value="">団体（すべて）</option>
+            {orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+        )}
         <button type="submit" className={buttonClass('secondary', 'sm')}>絞り込み</button>
         <Link href="/reports" className={buttonClass('ghost', 'sm')}>クリア</Link>
       </form>
@@ -103,7 +112,9 @@ export default async function ReportsPage({
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/reports/${r.id}`} className="text-sm font-medium text-emerald-700 hover:underline">編集</Link>
+                      <Link href={`/reports/${r.id}`} className="text-sm font-medium text-emerald-700 hover:underline">
+                        {r.status === 'CONFIRMED' && isOrgUser ? '見る' : '開く'}
+                      </Link>
                     </td>
                   </tr>
                 );

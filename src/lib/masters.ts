@@ -3,7 +3,7 @@
 
 import type {
   AgeGroup, RegionOption, IntakeCategory, OutcomeCategory,
-  Prefecture, Species, Region, ReportStatus, AnimalKind,
+  Prefecture, Species, Region, ReportStatus, AnimalKind, Role,
 } from './types';
 
 // ---- 年齢区分 ----
@@ -102,6 +102,9 @@ export const ANIMAL_KIND_LABEL: Record<AnimalKind, string> = { DOG: '犬', CAT: 
 export const SPECIES_LABEL: Record<Species, string> = { DOG: '犬', CAT: '猫' };
 export const STATUS_LABEL: Record<ReportStatus, string> = {
   DRAFT: '下書き', SUBMITTED: '提出済み', CONFIRMED: '確定',
+};
+export const ROLE_LABEL: Record<Role, string> = {
+  ADMIN: 'JASA事務局', ORG_USER: '団体ユーザー', VIEWER: '閲覧者',
 };
 export const REGION_LABEL: Record<Region, string> = {
   IN_PREF: '県内', ADJACENT: '県外：隣接', DISTANT: '県外：遠隔', NONE: '—',

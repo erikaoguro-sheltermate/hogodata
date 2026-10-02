@@ -1,6 +1,7 @@
 // 期間集計エクスポート（月次/四半期/年次）— 報告会向け
 import { listReports, type ReportFilter } from '@/lib/data/repo';
 import { summarizeByPeriod, type PeriodType } from '@/lib/data/analytics';
+import { getSession } from '@/lib/auth/session';
 import type { Species } from '@/lib/types';
 
 function csvCell(v: string | number): string {
@@ -9,6 +10,10 @@ function csvCell(v: string | number): string {
 }
 
 export async function GET(request: Request) {
+  const session = await getSession();
+  if (!session.hasAccess) {
+    return new Response('権限がありません。', { status: 403 });
+  }
   const url = new URL(request.url);
   const period = (['month', 'quarter', 'year'].includes(url.searchParams.get('period') ?? '')
     ? url.searchParams.get('period') : 'quarter') as PeriodType;
