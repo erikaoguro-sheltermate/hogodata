@@ -31,7 +31,18 @@ export default async function BackupPage() {
             いま登録されている全データ（レポート {reports.length} 件・団体 {orgs.length} 件）を CSV で保存します。
             Excel や Google スプレッドシートでそのまま開けます。
           </p>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-slate-800">Excel 1 ファイルにまとめて保存（おすすめ）</div>
+                <p className="mt-0.5 text-xs text-slate-600">「レポート一覧」「レポート明細」「団体一覧」の 3 枚のシートが入ります。</p>
+              </div>
+              <a href="/api/exports/backup?format=xlsx" className={buttonClass('primary')}>Excel をダウンロード</a>
+            </div>
+          </div>
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm text-slate-600">CSV で個別に保存する</summary>
+          <div className="mt-3 grid gap-3 md:grid-cols-3">
             {FILES.map((f) => (
               <div key={f.kind} className="rounded-lg border border-slate-200 p-4">
                 <div className="text-sm font-semibold text-slate-800">{f.title}</div>
@@ -42,7 +53,8 @@ export default async function BackupPage() {
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-slate-400">ファイル名には日付が入ります（例：hogodata-reports-{today}.csv）。</p>
+          </details>
+          <p className="mt-3 text-xs text-slate-400">ファイル名には日付が入ります（例：hogodata-backup-{today}.xlsx）。</p>
         </CardBody>
       </Card>
 
