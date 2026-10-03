@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 const TABS = [
   { href: '/settings/users', label: 'ユーザー・権限' },
   { href: '/settings/portal', label: '提出期限・問い合わせ先' },
+  { href: '/settings/backup', label: 'データの控え' },
   { href: '/settings/audit', label: '変更履歴' },
 ];
 
