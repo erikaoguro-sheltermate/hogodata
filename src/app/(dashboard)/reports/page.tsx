@@ -97,7 +97,7 @@ export default async function ReportsPage({
           const org = orgs.find((o) => o.id === r.organizationId);
           const bal = checkBalance(r);
           return (
-            <Link key={r.id} href={`/reports/${r.id}`} className="block rounded-lg border border-slate-200 bg-white p-4 active:bg-slate-50">
+            <Link key={r.id} prefetch={false} href={`/reports/${r.id}`} className="block rounded-lg border border-slate-200 bg-white p-4 active:bg-slate-50">
               <div className="flex items-center justify-between gap-2">
                 <div className="text-base font-bold text-slate-800">{ymLabel(r.year, r.month)} <span className="font-medium text-slate-600">{SPECIES_LABEL[r.species]}</span></div>
                 <ReportStatusBadge report={r} />
@@ -152,7 +152,7 @@ export default async function ReportsPage({
                       <ReportStatusBadge report={r} />
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link href={`/reports/${r.id}`} className="text-sm font-medium text-emerald-700 hover:underline">
+                      <Link prefetch={false} href={`/reports/${r.id}`} className="text-sm font-medium text-emerald-700 hover:underline">
                         {r.status === 'CONFIRMED' && isOrgUser ? '見る' : '開く'}
                       </Link>
                     </td>

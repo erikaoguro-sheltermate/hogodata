@@ -51,7 +51,7 @@ export default async function SubmissionsPage({
           <h1 className="text-2xl font-bold text-slate-800">提出状況</h1>
           <p className="mt-1 text-sm text-slate-500">団体ごとの月次報告の提出状況。未提出の団体への連絡や、団体別の還元レポートもここから。</p>
         </div>
-        <Link href={`/org-report/all?fy=${fy}`} className={buttonClass('secondary', 'sm')}>還元レポートを全団体まとめて</Link>
+        <Link prefetch={false} href={`/org-report/all?fy=${fy}`} className={buttonClass('secondary', 'sm')}>還元レポートを全団体まとめて</Link>
         <div className="flex gap-1 rounded-md bg-slate-100 p-1">
           <Link href={qs({ view: 'month' })} className={cn('rounded-md px-4 py-1.5 text-sm', view === 'month' ? 'bg-white font-medium text-slate-800' : 'text-slate-500')}>月ごと</Link>
           <Link href={qs({ view: 'review' })} className={cn('rounded-md px-4 py-1.5 text-sm', view === 'review' ? 'bg-white font-medium text-slate-800' : 'text-slate-500')}>
@@ -150,7 +150,7 @@ function MonthView({ orgs, reports, year, month, deadlineDay, onlyMissing, nav }
               {shown.map(({ org, st }) => (
                 <tr key={org.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                   <td className="min-w-[10rem] px-4 py-3">
-                    <Link href={`/organizations/${org.id}`} className="font-medium text-slate-700 hover:text-emerald-700">{org.name}</Link>
+                    <Link prefetch={false} href={`/organizations/${org.id}`} className="font-medium text-slate-700 hover:text-emerald-700">{org.name}</Link>
                     <div className="text-xs text-slate-400">{prefectureByCode(org.prefectureCode)?.name ?? ''}</div>
                   </td>
                   {(['DOG', 'CAT'] as const).map((s) => {
@@ -171,7 +171,7 @@ function MonthView({ orgs, reports, year, month, deadlineDay, onlyMissing, nav }
                     {org.contactEmail ? <a href={`mailto:${org.contactEmail}`} className="hover:text-emerald-700">{org.contactEmail}</a> : <span className="text-amber-600">メール未登録</span>}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right">
-                    <Link href={`/org-report/${org.id}`} className="text-sm font-medium text-emerald-700 hover:underline">還元レポート</Link>
+                    <Link prefetch={false} href={`/org-report/${org.id}`} className="text-sm font-medium text-emerald-700 hover:underline">還元レポート</Link>
                   </td>
                 </tr>
               ))}
@@ -215,7 +215,7 @@ function YearView({ orgs, reports, fy, due, nav }: {
               {orgs.map((org) => (
                 <tr key={org.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                   <td className="whitespace-nowrap px-4 py-2.5">
-                    <Link href={`/organizations/${org.id}`} className="font-medium text-slate-700 hover:text-emerald-700">{org.name}</Link>
+                    <Link prefetch={false} href={`/organizations/${org.id}`} className="font-medium text-slate-700 hover:text-emerald-700">{org.name}</Link>
                   </td>
                   {months.map((m) => {
                     const key = `${m.year}-${m.month}`;
@@ -223,7 +223,7 @@ function YearView({ orgs, reports, fy, due, nav }: {
                     const st = orgMonthStatus(org, reports, m.year, m.month).state;
                     return (
                       <td key={key} className="px-2 py-2.5 text-center">
-                        <Link href={`/submissions?y=${m.year}&m=${m.month}`} className={cn('text-base', cellCls[st])} title={`${org.name} ${ymLabel(m.year, m.month)}`}>
+                        <Link prefetch={false} href={`/submissions?y=${m.year}&m=${m.month}`} className={cn('text-base', cellCls[st])} title={`${org.name} ${ymLabel(m.year, m.month)}`}>
                           {cell[st]}
                         </Link>
                       </td>

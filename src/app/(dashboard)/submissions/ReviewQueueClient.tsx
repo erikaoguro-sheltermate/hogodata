@@ -100,7 +100,7 @@ export function ReviewQueueClient({ rows }: { rows: ReviewRow[] }) {
                     </div>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right">
-                    <Link href={`/reports/${r.id}`} className="text-sm font-medium text-emerald-700 hover:underline">中身を見る</Link>
+                    <Link prefetch={false} href={`/reports/${r.id}`} className="text-sm font-medium text-emerald-700 hover:underline">中身を見る</Link>
                   </td>
                 </tr>
               ))}

@@ -22,6 +22,7 @@ cp .env.example .env
 
 `.env` に以下を設定：
 - `DATABASE_URL` … Connection pooler（port **6543**, `?pgbouncer=true&connection_limit=1`）
+  - **本番（Vercel）は必ずこの 6543 番（transaction モード）**。5432 番（session モード）のままだと、同時接続が 15 本を超えた時点で `EMAXCONNSESSION` エラーになる（2026-10-05 に発生）。
 - `DIRECT_URL` … 直結（port **5432**）※マイグレーション用
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` … API ページから
 

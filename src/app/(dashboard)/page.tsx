@@ -73,7 +73,7 @@ export default async function DashboardPage() {
                     return (
                       <tr key={r.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                         <td className="px-4 py-3">
-                          <Link href={`/reports/${r.id}`} className="font-medium text-slate-700 hover:text-emerald-700">{org?.name ?? '—'}</Link>
+                          <Link prefetch={false} href={`/reports/${r.id}`} className="font-medium text-slate-700 hover:text-emerald-700">{org?.name ?? '—'}</Link>
                         </td>
                         <td className="px-4 py-3 text-slate-500">{prefectureByCode(org?.prefectureCode ?? '')?.name ?? '—'}</td>
                         <td className="px-4 py-3 text-slate-600">{SPECIES_LABEL[r.species]}</td>
@@ -102,7 +102,7 @@ export default async function DashboardPage() {
                   {unsubmitted.map((o) => (
                     <li key={o.id} className="flex items-center justify-between gap-2 rounded-lg bg-amber-50 px-3 py-2">
                       <span className="text-sm text-slate-700">{o.name}</span>
-                      <Link href={`/reports/new?org=${o.id}&year=${latest.year}&month=${latest.month}`} className="text-xs font-medium text-amber-700 hover:underline">代行入力</Link>
+                      <Link prefetch={false} href={`/reports/new?org=${o.id}&year=${latest.year}&month=${latest.month}`} className="text-xs font-medium text-amber-700 hover:underline">代行入力</Link>
                     </li>
                   ))}
                 </ul>
@@ -111,7 +111,7 @@ export default async function DashboardPage() {
           </Card>
 
           <div className="mt-4 grid gap-2">
-            <Link href={`/submissions?y=${latest.year}&m=${latest.month}`} className={buttonClass('primary')}>提出状況を見る・連絡する</Link>
+            <Link prefetch={false} href={`/submissions?y=${latest.year}&m=${latest.month}`} className={buttonClass('primary')}>提出状況を見る・連絡する</Link>
             <Link href="/analytics" className={buttonClass('secondary')}>集計ダッシュボードを見る</Link>
             <Link href="/organizations" className={buttonClass('secondary')}>団体を管理する</Link>
           </div>

@@ -41,9 +41,9 @@ function DueCard({ orgId, species, report, prev, year, month }: {
             count={prev.endingCount} foster={prev.endingFosterCount} label={`${ymLabel(year, month)}分（${SPECIES_LABEL[species]}）`} />
         )}
         {report?.status === 'DRAFT' && (
-          <Link href={`/reports/${report.id}`} className={buttonClass('primary', 'sm')}>{returned ? '直して再提出' : '続きを入力して提出'}</Link>
+          <Link prefetch={false} href={`/reports/${report.id}`} className={buttonClass('primary', 'sm')}>{returned ? '直して再提出' : '続きを入力して提出'}</Link>
         )}
-        {done && <Link href={`/reports/${report.id}`} className="text-sm font-medium text-emerald-700 hover:underline">内容を見る</Link>}
+        {done && <Link prefetch={false} href={`/reports/${report.id}`} className="text-sm font-medium text-emerald-700 hover:underline">内容を見る</Link>}
       </div>
       {!report && prev && (
         <p className="mt-2 text-xs text-slate-500">収容も転帰もなかった月は「動きなしで提出」でOK（頭数は前月のまま {prev.endingCount} 頭）</p>
@@ -80,7 +80,7 @@ export async function OrgHome({ session }: { session: Session }) {
           <h1 className="text-2xl font-bold text-slate-800">{org?.name ?? '所属団体'}</h1>
           <p className="mt-1 text-sm text-slate-500">{session.displayName} さん、いつもご協力ありがとうございます。</p>
         </div>
-        <Link href={`/org-report/${orgId}?fy=${fy}`} className={buttonClass('secondary')}>年度のまとめを見る</Link>
+        <Link prefetch={false} href={`/org-report/${orgId}?fy=${fy}`} className={buttonClass('secondary')}>年度のまとめを見る</Link>
       </div>
 
       {/* 差し戻し（最優先で目立たせる） */}
@@ -93,7 +93,7 @@ export async function OrgHome({ session }: { session: Session }) {
               </div>
               <p className="mt-1 whitespace-pre-wrap text-sm text-red-900">{r.returnNote}</p>
             </div>
-            <Link href={`/reports/${r.id}`} className={buttonClass('primary', 'sm')}>直して再提出</Link>
+            <Link prefetch={false} href={`/reports/${r.id}`} className={buttonClass('primary', 'sm')}>直して再提出</Link>
           </div>
         </div>
       ))}
@@ -177,7 +177,7 @@ export async function OrgHome({ session }: { session: Session }) {
                         return (
                           <td key={s} className="whitespace-nowrap px-3 py-2.5 md:px-4">
                             {r ? (
-                              <Link href={`/reports/${r.id}`} className="inline-block hover:opacity-80">
+                              <Link prefetch={false} href={`/reports/${r.id}`} className="inline-block hover:opacity-80">
                                 {isReturned(r) ? <Badge color="red">差し戻し</Badge> : <Badge color={STATUS_COLOR[r.status]}>{STATUS_LABEL[r.status]}</Badge>}
                               </Link>
                             ) : future ? (

@@ -33,7 +33,7 @@ function StatusCell({ report, href }: { report: MonthlyReport | undefined; href:
     );
   }
   return (
-    <Link href={`/reports/${report.id}`} className="inline-block hover:opacity-80">
+    <Link prefetch={false} href={`/reports/${report.id}`} className="inline-block hover:opacity-80">
       <ReportStatusBadge report={report} />
     </Link>
   );
@@ -79,8 +79,8 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
             </p>
           </div>
           <div className="flex gap-2">
-            <Link href={`/org-report/${org.id}`} className={buttonClass('secondary')}>還元レポート</Link>
-            <Link href={`/reports/new?org=${org.id}`} className={buttonClass('primary')}>＋ レポートを入力</Link>
+            <Link prefetch={false} href={`/org-report/${org.id}`} className={buttonClass('secondary')}>還元レポート</Link>
+            <Link prefetch={false} href={`/reports/new?org=${org.id}`} className={buttonClass('primary')}>＋ レポートを入力</Link>
           </div>
         </div>
       </div>

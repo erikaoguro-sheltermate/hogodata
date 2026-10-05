@@ -92,7 +92,7 @@ export default async function SubmittedPage({ params }: { params: Promise<{ id: 
         <Link href={isOrgUser ? '/' : '/submissions'} className={buttonClass(remaining.length > 0 ? 'secondary' : 'primary')}>
           {isOrgUser ? 'ホームに戻る' : '提出状況に戻る'}
         </Link>
-        <Link href={`/reports/${report.id}`} className={buttonClass('ghost')}>内容を見る</Link>
+        <Link prefetch={false} href={`/reports/${report.id}`} className={buttonClass('ghost')}>内容を見る</Link>
       </div>
     </div>
   );
