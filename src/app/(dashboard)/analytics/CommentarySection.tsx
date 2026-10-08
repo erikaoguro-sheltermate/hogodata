@@ -19,10 +19,13 @@ export function CommentarySection({
   const [msg, setMsg] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState(false);
 
-  // フィルタ変更で内容が変わったら追従（未編集時のみ）
-  React.useEffect(() => {
-    if (!editing) setBody(savedBody ?? draft);
-  }, [savedBody, draft, editing]);
+  // フィルタ変更で内容が変わったら追従（未編集時のみ）。effect ではなく描画中に前回値と比べて更新する
+  const source = savedBody ?? draft;
+  const [prevSource, setPrevSource] = React.useState(source);
+  if (source !== prevSource) {
+    setPrevSource(source);
+    if (!editing) setBody(source);
+  }
 
   async function save() {
     setSaving(true); setMsg(null);

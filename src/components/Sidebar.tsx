@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import type { Role } from '@/lib/types';
 import { ROLE_LABEL } from '@/lib/masters';
 import { logout } from '@/app/login/actions';
+import { setDemoRoleCookie } from '@/lib/auth/demo-role-cookie';
 import {
   HomeIcon, ClipboardIcon, FileIcon, ChartIcon, MegaphoneIcon, BuildingIcon, SettingsIcon, UsersIcon, HelpIcon, KeyIcon, MenuIcon, CloseIcon, LogoMark,
 } from '@/components/icons';
@@ -67,7 +68,7 @@ export function Sidebar({ role, displayName, mode, unreadCount, reviewCount = 0 
   const active = activeItems.find((i) => i.href !== '/organizations') ?? activeItems[0];
 
   function switchRole(next: Role) {
-    document.cookie = `jasa_role=${next}; path=/; max-age=31536000`;
+    setDemoRoleCookie(next);
     window.location.assign('/');
   }
 

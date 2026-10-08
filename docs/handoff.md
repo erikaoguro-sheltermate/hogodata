@@ -40,7 +40,7 @@
 - Excel 取り込み（F-08）
 - 事務局向けの二段階認証
 - 事務局画面のスマホ最適化
-- lint の既存エラー 3 件（CommentarySection / DemoRoleButtons / Sidebar の document.cookie）は main 由来で未修正
+- lint の警告 7 件（未使用変数）。エラーは 0 件（2026-10-08 に CommentarySection / DemoRoleButtons / Sidebar の 3 件を修正、本番反映は次回の `npx vercel --prod` で）
 
 ## 作業の進め方（Claude への指示）
 - このリポジトリ内は自由に編集してよい。ShelterMate-App の takapom のコードは触らない

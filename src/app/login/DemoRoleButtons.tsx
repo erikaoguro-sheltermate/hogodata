@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui';
 import type { Role } from '@/lib/types';
+import { setDemoRoleCookie } from '@/lib/auth/demo-role-cookie';
 
 const ROLES: { role: Role; label: string; desc: string }[] = [
   { role: 'ADMIN', label: 'JASA事務局として入る', desc: '全団体の代行入力・集計・管理' },
@@ -13,7 +14,7 @@ const ROLES: { role: Role; label: string; desc: string }[] = [
 export function DemoRoleButtons() {
   const router = useRouter();
   function enter(role: Role) {
-    document.cookie = `jasa_role=${role}; path=/; max-age=31536000`;
+    setDemoRoleCookie(role);
     router.push('/');
   }
   return (
