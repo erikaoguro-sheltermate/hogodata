@@ -40,12 +40,17 @@ export interface Summary {
   catReports: number;
 }
 
+/** 集計に使うレポートか：提出済み・確定のみ。下書き（差し戻し中を含む）は入力途中の数字なので使わない */
+export function isCounted(r: MonthlyReport): boolean {
+  return r.status !== 'DRAFT';
+}
+
 /** 現在の管理頭数：各団体×種別の「最新レポートの記録終了時頭数」の合計（スナップショット） */
 export interface ManagedCount { total: number; foster: number; dog: number; cat: number; orgCount: number }
 export function currentManagedCount(reports: MonthlyReport[]): ManagedCount {
   const latest = new Map<string, MonthlyReport>();
   for (const r of reports) {
-    if (r.status === 'DRAFT') continue; // 入力途中の数字は使わない
+    if (!isCounted(r)) continue;
     const key = `${r.organizationId}:${r.species}`;
     const cur = latest.get(key);
     if (!cur || r.year > cur.year || (r.year === cur.year && r.month > cur.month)) latest.set(key, r);
@@ -68,7 +73,8 @@ export function reportOutcomeTotal(r: MonthlyReport): number {
   return sumOutcome(r.outcomeEntries);
 }
 
-export function summarize(reports: MonthlyReport[]): Summary {
+export function summarize(allReports: MonthlyReport[]): Summary {
+  const reports = allReports.filter(isCounted);
   const intakeMap = new Map<string, number>();
   const outcomeMap = new Map<string, number>();
   const intakeAge = new Map<string, { u5m: number; m5_10y: number; o10y: number }>();
@@ -202,7 +208,8 @@ export function generateInsights(summary: Summary, managed: ManagedCount): strin
   return lines.join('\n');
 }
 
-export function summarizeByPeriod(reports: MonthlyReport[], type: PeriodType): PeriodSummary[] {
+export function summarizeByPeriod(allReports: MonthlyReport[], type: PeriodType): PeriodSummary[] {
+  const reports = allReports.filter(isCounted);
   const map = new Map<string, {
     key: string; label: string; orgs: Set<string>;
     dogReports: number; catReports: number; intakeTotal: number;

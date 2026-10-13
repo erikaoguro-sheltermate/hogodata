@@ -132,9 +132,9 @@ export default async function OrganizationDetailPage({ params }: { params: Promi
 
       {/* この団体の活動統計 */}
       <div className="mt-8">
-        <SectionTitle subtitle="この団体のこれまでの月次データ">活動統計</SectionTitle>
-        {reports.length === 0 ? (
-          <Card><CardBody><p className="text-sm text-slate-400">まだレポートがありません。</p></CardBody></Card>
+        <SectionTitle subtitle="この団体のこれまでの月次データ（提出済み・確定分）">活動統計</SectionTitle>
+        {orgSummary.reportCount === 0 ? (
+          <Card><CardBody><p className="text-sm text-slate-400">まだ提出されたレポートがありません。</p></CardBody></Card>
         ) : (
           <>
             <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
